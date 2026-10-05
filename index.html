@@ -28,9 +28,9 @@
   --brass-2: #8a6420;
   --eye: #8fe8a0;
   --eye-dark: #0b2214;
-  --dial: "Big Shoulders Display", Oswald, Impact, "Arial Narrow", sans-serif;
+  --dial: "Big Shoulders Display", Oswald, "Arial Narrow", Impact, sans-serif;
   --copy: Spectral, Georgia, "Times New Roman", serif;
-  --name: clamp(64px, 12.5vw, 196px);   /* station print size; the scale is derived from it */
+  --name: clamp(64px, min(12.5vw, 22vh), 196px);   /* station print size; the scale is derived from it */
   --k: calc(var(--name) / 50);         /* px per kHz */
   --frame: clamp(10px, 1.4vw, 18px);
   --pad: clamp(18px, 3vw, 44px);
@@ -51,7 +51,7 @@ ul { padding: 0; list-style: none; }
 a { color: inherit; text-decoration-thickness: 1.5px; text-underline-offset: .18em; }
 a:hover { color: var(--needle); }
 :focus-visible { outline: 3px solid var(--needle); outline-offset: 4px; border-radius: 2px; }
-.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 
 /* ---------- cabinet top: nameplate, magic eye, sound knob ---------- */
 header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 .25rem; }
@@ -107,7 +107,7 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 }
 #noise { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; mix-blend-mode: multiply; image-rendering: pixelated; opacity: var(--noise, 0); z-index: 3; }
 
-#strip { position: absolute; top: clamp(14px, 2.6vh, 26px); left: 0; width: calc(1180 * var(--k)); will-change: transform; z-index: 2; }
+#strip { position: absolute; top: clamp(14px, 2.6vh, 26px); left: 0; will-change: transform; z-index: 2; }
 .ruler { position: relative; height: 48px; }
 .ruler::before, .ruler::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; }
 .ruler::before { height: 9px; background: repeating-linear-gradient(90deg, var(--print) 0 1.5px, transparent 1.5px calc(var(--k) * 10)); opacity: .7; }
@@ -122,7 +122,7 @@ header { display: flex; align-items: center; justify-content: space-between; gap
   radial-gradient(circle at 84% 36%, var(--print) 14%, transparent 16%); opacity: .55; }
 .names { position: relative; height: calc(var(--name) * .95); margin-top: 4px; }
 .names button {
-  position: absolute; top: 0; transform: translateX(-50%); padding: 0 .06em; border: 0; background: none; cursor: pointer;
+  position: absolute; top: 0; transform: translateX(-50%) scaleX(var(--fit, 1)); padding: 0 .06em; border: 0; background: none; cursor: pointer;
   font: 900 var(--name)/1 var(--dial); letter-spacing: .01em; text-transform: uppercase; color: var(--print); white-space: nowrap;
   transition: color .25s;
 }
@@ -215,11 +215,11 @@ kbd { font: 700 .72rem/1 var(--dial); letter-spacing: .06em; padding: .15em .35e
   </div>
   <div class="controls">
     <div id="eye" title="Tuning indicator" aria-hidden="true"></div>
-    <button id="snd" aria-pressed="false"><span class="knob" aria-hidden="true"></span><span class="off">Sound off</span><span class="on">Sound on</span></button>
+    <button id="snd" type="button" aria-pressed="false" aria-label="Sound"><span class="knob" aria-hidden="true"></span><span class="off">Sound off</span><span class="on">Sound on</span></button>
   </div>
 </header>
 
-<main id="glass" aria-label="Dial. Drag left or right to tune.">
+<main id="glass" aria-label="Dial. Drag left or right, or use the arrow keys, to tune.">
   <div id="lamp" aria-hidden="true"></div>
   <div id="strip">
     <div class="ruler" id="ruler" aria-hidden="true"></div>
@@ -228,16 +228,16 @@ kbd { font: 700 .72rem/1 var(--dial); letter-spacing: .06em; padding: .15em .35e
   <canvas id="noise" aria-hidden="true"></canvas>
   <div id="needle" aria-hidden="true"></div>
   <div id="hint" aria-hidden="true"><svg viewBox="0 0 34 10" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 5h32M5 1 1 5l4 4M29 1l4 4-4 4"/></svg>drag to tune</div>
-  <div id="programme"></div>
-  <nav class="legend" id="legend" aria-label="Stations"></nav>
+  <div id="programme" tabindex="0" role="region" aria-label="Programme"></div>
+  <div class="legend" id="legend" aria-hidden="true"></div>
   <div class="sr" aria-live="polite" id="live"></div>
 </main>
 
 <footer>
   <nav aria-label="Contact">
-    <a id="f-mail" href="#">email</a>
-    <a id="f-gh" href="#" rel="me">GitHub</a>
-    <a id="f-x" href="#" rel="me">X</a>
+    <a id="f-mail" href="mailto:dakshjainn2004@gmail.com">email</a>
+    <a id="f-gh" href="https://github.com/wannabeepolymath" rel="me">GitHub</a>
+    <a id="f-x" href="https://x.com/dakshhjainn" rel="me">X</a>
   </nav>
   <span class="keys"><kbd>←</kbd> <kbd>→</kbd> change station</span>
 </footer>
@@ -296,77 +296,120 @@ const STATIONS = [
 ];
 
 const LO = 520, HI = 1700, BAND = 22;
-const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const rmq = matchMedia("(prefers-reduced-motion: reduce)");
+let RM = rmq.matches;
 const $ = id => document.getElementById(id);
-const glass = $("glass"), strip = $("strip"), prog = $("programme"), hint = $("hint"), live = $("live");
+const root = document.documentElement, glass = $("glass"), strip = $("strip"), prog = $("programme"), hint = $("hint"), live = $("live");
+const kbFocus = el => { try { return el.matches(":focus-visible"); } catch (_) { return true; } }; // old Safari lacks :focus-visible
 
 /* ---------- print the scale ---------- */
 const ruler = $("ruler"), names = $("names");
+strip.style.width = `calc(${HI - LO} * var(--k))`;
 for (let f = 600; f < HI; f += 100) { const s = document.createElement("span"); s.textContent = f; s.style.left = `calc(${f - LO} * var(--k))`; ruler.appendChild(s); }
-const unit = document.createElement("span"); unit.className = "unit"; unit.textContent = "kHz"; unit.style.left = `calc(${LO + 22 - LO} * var(--k))`; ruler.appendChild(unit);
-STATIONS.forEach((s, i) => {
+const unit = document.createElement("span"); unit.className = "unit"; unit.textContent = "kHz"; unit.style.left = `calc(22 * var(--k))`; ruler.appendChild(unit);
+STATIONS.forEach(s => {
   s.el = document.createElement("section"); s.el.className = "station"; s.el.innerHTML = `<div class="freq">${s.f} kHz${s.secret ? "" : ", " + s.name}</div>` + s.html; prog.appendChild(s.el);
   if (s.secret) { const p = document.createElement("span"); p.className = "paw"; p.style.left = `calc(${s.f - LO} * var(--k))`; ruler.appendChild(p); return; }
-  const b = document.createElement("button"); b.type = "button"; b.textContent = s.name; b.setAttribute("aria-label", `Tune to ${s.name}, ${s.f} kHz`);
-  b.style.left = `calc(${s.f - LO} * var(--k))`; b.addEventListener("click", () => tuneTo(s)); b.addEventListener("focus", () => tuneTo(s)); names.appendChild(b);
+  const b = s.btn = document.createElement("button"); b.type = "button"; b.textContent = s.name; b.setAttribute("aria-label", `Tune to ${s.name}, ${s.f} kHz`);
+  b.style.left = `calc(${s.f - LO} * var(--k))`;
+  b.addEventListener("click", e => { if (!(dragged && e.detail)) tuneTo(s); }); // a drag that ends on a name is not a click
+  b.addEventListener("focus", () => { if (kbFocus(b)) tuneTo(s); });            // tab onto a name = tune to it; mouse focus waits for the click
+  names.appendChild(b);
 });
-STATIONS.filter(s => !s.secret).forEach(s => { const b = document.createElement("button"); b.type = "button"; b.innerHTML = `<span class="f">${s.f}</span>${s.name}`; b.addEventListener("click", () => tuneTo(s)); s.leg = b; $("legend").appendChild(b); });
+const PRINTED = STATIONS.filter(s => !s.secret);
+PRINTED.forEach(s => { const b = document.createElement("button"); b.type = "button"; b.tabIndex = -1; b.innerHTML = `<span class="f">${s.f}</span>${s.name}`; b.addEventListener("click", () => tuneTo(s)); s.leg = b; $("legend").appendChild(b); });
 $("f-mail").href = "mailto:" + DAKSH.email; $("f-gh").href = DAKSH.github; $("f-x").href = DAKSH.x;
 
 /* ---------- tuning ---------- */
-let freq = RM ? 630 : 548, target = null, vel = 0, dragging = false, k = 3, cx = 0, current = null, locked = null, moved = false;
+let freq = RM ? STATIONS[0].f : 548, target = null, vel = 0, dragging = false, dragged = false, k = 3, cx = 0, current = null, locked = null, moved = false;
 const signalOf = f => Math.max(...STATIONS.map(s => Math.exp(-(((f - s.f) / BAND) ** 2))));
 const nearest = f => STATIONS.reduce((a, s) => Math.abs(s.f - f) < Math.abs(a.f - f) ? s : a);
 const clamp = f => Math.min(HI, Math.max(LO, f));
-function measure() { k = parseFloat(getComputedStyle(names.firstElementChild).fontSize) / 50; cx = glass.clientWidth / 2; sizeNoise(); }
+function measure() {
+  const b = names.firstElementChild; k = b ? parseFloat(getComputedStyle(b).fontSize) / 50 || 3 : 3; cx = glass.clientWidth / 2;
+  if (dragging) { px = lastX; pf = freq; } // resized mid-drag: re-anchor so the dial doesn't jump
+  PRINTED.forEach((s, i) => { // squeeze a name that would collide with its neighbour (fallback font, long name, close stations)
+    const gap = Math.min(i ? s.f - PRINTED[i - 1].f : 1e9, i < PRINTED.length - 1 ? PRINTED[i + 1].f - s.f : 1e9);
+    s.btn.style.setProperty("--fit", Math.min(1, gap * k * .9 / s.btn.offsetWidth).toFixed(3));
+  });
+  sizeNoise();
+}
 function tuneTo(s) { target = s.f; vel = 0; usedDial(); }
 function detent() { const s = nearest(freq); if (Math.abs(s.f - freq) < 18) target = s.f; }
 function usedDial() { if (!moved) { moved = true; hint.classList.add("gone"); } }
 
-let px = 0, py = 0, pf = 0, lastX = 0, lastT = 0, axis = null;
+/* pointer: mouse, pen and touch. Capture only once the gesture is clearly horizontal, so taps still click names and vertical swipes still scroll. */
+let px = 0, py = 0, pf = 0, lastX = 0, lastT = 0, axis = null, pid = null;
 glass.addEventListener("pointerdown", e => {
-  if (e.button || e.target.closest("a, button") || e.target.closest("#programme")) return;
-  dragging = true; axis = null; target = null; vel = 0; px = e.clientX; py = e.clientY; pf = freq; lastX = e.clientX; lastT = e.timeStamp;
-  glass.setPointerCapture(e.pointerId); glass.classList.add("dragging");
+  if (e.button || !e.isPrimary || e.target.closest("a, #programme, .legend")) return;
+  dragging = true; dragged = false; axis = null; target = null; vel = 0; pid = e.pointerId;
+  px = lastX = e.clientX; py = e.clientY; pf = freq; lastT = e.timeStamp;
 });
 glass.addEventListener("pointermove", e => {
-  if (!dragging) return;
-  if (!axis) { const dx = Math.abs(e.clientX - px), dy = Math.abs(e.clientY - py); if (dx < 6 && dy < 6) return; axis = dx >= dy ? "x" : "y"; }
-  if (axis === "y") return;
+  if (!dragging || e.pointerId !== pid) return;
+  if (!axis) {
+    const dx = Math.abs(e.clientX - px), dy = Math.abs(e.clientY - py); if (dx < 6 && dy < 6) return;
+    axis = dx >= dy ? "x" : "y";
+    if (axis === "x") { dragged = true; try { glass.setPointerCapture(pid); } catch (_) {} glass.classList.add("dragging"); usedDial(); }
+  }
+  if (axis !== "x") return;
   freq = clamp(pf - (e.clientX - px) / k);
-  const dt = e.timeStamp - lastT; if (dt > 0) { vel = -(e.clientX - lastX) / k / dt * 16; } lastX = e.clientX; lastT = e.timeStamp;
-  if (Math.abs(e.clientX - px) > 6) usedDial();
+  const dt = e.timeStamp - lastT; if (dt > 0) vel = -(e.clientX - lastX) / k / dt * 16.667; lastX = e.clientX; lastT = e.timeStamp;
 });
-const release = e => { if (!dragging) return; dragging = false; glass.classList.remove("dragging"); if (RM || Math.abs(vel) < .4) { vel = 0; detent(); } };
-glass.addEventListener("pointerup", release); glass.addEventListener("pointercancel", release);
+const release = e => {
+  if (!dragging || e.pointerId !== pid) return;
+  dragging = false; glass.classList.remove("dragging");
+  if (e.timeStamp - lastT > 90) vel = 0; // held still before letting go: no fling
+  if (RM || Math.abs(vel) < .4) { vel = 0; detent(); return; }
+  const end = clamp(freq + vel / (1 - .93)), s = nearest(end); // a fling that would coast to just short of a station lands on it
+  if (Math.abs(s.f - end) < 60) { vel = 0; target = s.f; }
+};
+["pointerup", "pointercancel", "lostpointercapture"].forEach(t => glass.addEventListener(t, release));
+glass.addEventListener("scroll", () => { glass.scrollLeft = glass.scrollTop = 0; }); // browsers without overflow:clip scroll the glass to a focused name
 
+/* wheel / trackpad. Firefox reports mouse wheels in lines. Vertical wheel only tunes when the page itself has nowhere to scroll. */
 let wheelT;
 glass.addEventListener("wheel", e => {
-  if (e.target.closest("#programme") && prog.scrollHeight > prog.clientHeight) return;
-  e.preventDefault(); target = null; vel = 0; freq = clamp(freq + (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * .18);
+  if (e.ctrlKey) return; // pinch-zoom
+  const horiz = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+  if (!horiz && ((e.target.closest("#programme") && prog.scrollHeight > prog.clientHeight + 1) || root.scrollHeight > innerHeight + 1)) return;
+  const d = (horiz ? e.deltaX : e.deltaY) * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? glass.clientWidth : 1);
+  e.preventDefault(); target = null; vel = 0; freq = clamp(freq + d * .18);
   usedDial(); clearTimeout(wheelT); wheelT = setTimeout(detent, 160);
 }, { passive: false });
 
 addEventListener("keydown", e => {
-  if (e.target.matches("input, textarea")) return;
-  const printed = STATIONS.filter(s => !s.secret), i = printed.indexOf(nearest(freq));
-  if (e.key === "ArrowRight") { tuneTo(printed[Math.min(printed.length - 1, i + 1)] || printed[0]); e.preventDefault(); }
-  else if (e.key === "ArrowLeft") { tuneTo(printed[Math.max(0, i - 1)] || printed[0]); e.preventDefault(); }
-  else if (e.key === "Home") { tuneTo(printed[0]); e.preventDefault(); }
-  else if (e.key === "End") { tuneTo(STATIONS[STATIONS.length - 1]); e.preventDefault(); }
+  if (e.altKey || e.ctrlKey || e.metaKey || e.defaultPrevented) return; // leave Alt+Arrow (history) etc. to the browser
+  const ref = target != null ? target : freq; let s;
+  if (e.key === "ArrowRight") s = PRINTED.find(p => p.f > ref + 1) || PRINTED[PRINTED.length - 1];
+  else if (e.key === "ArrowLeft") s = PRINTED.slice().reverse().find(p => p.f < ref - 1) || PRINTED[0];
+  else if (e.key === "Home") s = PRINTED[0];
+  else if (e.key === "End") s = STATIONS[STATIONS.length - 1];
+  else return;
+  e.preventDefault(); tuneTo(s);
+  const a = document.activeElement; if (a && a.parentNode === names && s.btn) s.btn.focus({ preventScroll: true }); // keep focus on the tuned name
 });
 
 /* ---------- static ---------- */
 const nc = $("noise"), nx = nc.getContext("2d", { alpha: false });
-let nw, nh, img, buf;
-function sizeNoise() { nw = Math.max(1, Math.ceil(glass.clientWidth / 3)); nh = Math.max(1, Math.ceil(glass.clientHeight / 3)); nc.width = nw; nc.height = nh; img = nx.createImageData(nw, nh); buf = new Uint32Array(img.data.buffer); drawNoise(); }
+let nw = 0, nh = 0, img, buf;
+function sizeNoise() {
+  const w = Math.max(1, Math.ceil(glass.clientWidth / 3)), h = Math.max(1, Math.ceil(glass.clientHeight / 3));
+  if (w === nw && h === nh) return;
+  nw = nc.width = w; nh = nc.height = h; img = nx.createImageData(nw, nh); buf = new Uint32Array(img.data.buffer); drawNoise();
+}
 function drawNoise() { for (let i = 0; i < buf.length; i++) { const v = 100 + (Math.random() * 155 | 0); buf[i] = 0xff000000 | (v << 16) | (v << 8) | v; } nx.putImageData(img, 0, 0); }
 
 /* text turns to noise when the signal is weak */
 const GLYPHS = "ABCDEFGHKLMNPRSTUVXYZ#%&*+=/\\|:;.·";
 const nodesOf = el => { const out = [], w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) if (n.data.trim()) out.push([n, n.data]); return out; };
 STATIONS.forEach(s => { s.nodes = nodesOf(s.el); });
-function scramble(p) { if (!current) return; for (const [n, o] of current.nodes) n.data = p <= 0 ? o : o.replace(/\S/g, c => Math.random() < p ? GLYPHS[Math.random() * GLYPHS.length | 0] : c); }
+let scrambled = false;
+function scramble(p) {
+  if (!current || (p <= 0 && !scrambled)) return; // already clean: don't touch the DOM
+  scrambled = p > 0;
+  for (const [n, o] of current.nodes) n.data = p <= 0 ? o : o.replace(/\S/g, c => Math.random() < p ? GLYPHS[Math.random() * GLYPHS.length | 0] : c);
+}
 
 /* ---------- sound (built in code, only after the knob is turned) ---------- */
 let ac, gNoise, osc, gOsc, gPurr;
@@ -399,39 +442,45 @@ function audio(sig, s) {
   gPurr.gain.setTargetAtTime(s.secret ? sig * 1.4 : 0, t, .1);
 }
 
-/* ---------- the loop ---------- */
-let frame = 0;
+/* ---------- the loop (time-based, so 60/120Hz screens feel the same; stops while the tab is hidden) ---------- */
+let frame = 0, last = 0, raf = 0, wSig = "", wNoise = "", wX = "";
 function show(s) {
   if (current === s) return;
   if (current) { scramble(0); current.el.classList.remove("on"); current.leg && current.leg.classList.remove("live"); }
   current = s; s.el.classList.add("on"); s.leg && s.leg.classList.add("live"); prog.scrollTop = 0;
 }
-function loop() {
-  frame++;
+function loop(now) {
+  const n = last ? Math.min(4, (now - last) / 16.667) : 1; last = now; frame++;
   if (!dragging) {
-    if (target != null) { freq += (target - freq) * (RM ? 1 : .11); if (Math.abs(target - freq) < .04) { freq = target; target = null; } }
-    else if (vel) { freq = clamp(freq + vel); vel *= .93; if (Math.abs(vel) < .25 || freq === LO || freq === HI) { vel = 0; detent(); } }
+    if (target != null) { freq += (target - freq) * (RM ? 1 : 1 - Math.pow(.89, n)); if (Math.abs(target - freq) < .04) { freq = target; target = null; } }
+    else if (vel) { freq = clamp(freq + vel * n); vel *= Math.pow(.93, n); if (Math.abs(vel) < .25 || freq === LO || freq === HI) { vel = 0; detent(); } }
   }
   const sig = signalOf(freq), s = nearest(freq);
   show(s);
   const jit = !RM && sig < .9 ? (Math.random() - .5) * (1 - sig) * 3 : 0;
-  strip.style.transform = `translate3d(${cx - (freq - LO) * k + jit}px,0,0)`;
-  document.documentElement.style.setProperty("--sig", sig.toFixed(3));
-  document.documentElement.style.setProperty("--noise", (RM ? .05 + (1 - sig) * .5 : .06 + (1 - sig) * .78).toFixed(3));
+  const x = (cx - (freq - LO) * k + jit).toFixed(1), sg = sig.toFixed(3), no = (RM ? .05 + (1 - sig) * .5 : .06 + (1 - sig) * .78).toFixed(3);
+  if (x !== wX) { strip.style.transform = `translate3d(${x}px,0,0)`; wX = x; }  // only write what changed: an idle dial costs nothing
+  if (sg !== wSig) { root.style.setProperty("--sig", sg); wSig = sg; }
+  if (no !== wNoise) { root.style.setProperty("--noise", no); wNoise = no; }
   if (!RM && (sig < .985 || frame % 8 === 0)) drawNoise();
   if (!RM && frame % 4 === 0) scramble(sig >= .985 ? 0 : (1 - sig) ** .8);
   if (sig >= .985 && locked !== s) { locked = s; live.textContent = `Tuned to ${s.secret ? "an unlisted station" : s.name}, ${s.f} kHz`; }
   else if (sig < .985) locked = null;
   audio(sig, s);
-  requestAnimationFrame(loop);
+  raf = requestAnimationFrame(loop);
 }
+function start() { if (!raf && !document.hidden) { last = 0; raf = requestAnimationFrame(loop); } }
+document.addEventListener("visibilitychange", () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else start(); });
+const onRM = () => { RM = rmq.matches; scramble(0); };
+rmq.addEventListener ? rmq.addEventListener("change", onRM) : rmq.addListener(onRM);
 
-addEventListener("resize", () => { measure(); });
-document.fonts.ready.then(measure);
+if (window.ResizeObserver) new ResizeObserver(measure).observe(glass); else addEventListener("resize", measure);
+if (document.fonts) { document.fonts.ready.then(measure); document.fonts.addEventListener && document.fonts.addEventListener("loadingdone", measure); } // re-fit names once the dial face arrives
 measure();
-requestAnimationFrame(() => { glass.classList.remove("cold"); });
-if (!RM) setTimeout(() => { if (!moved && !dragging) target = 630; }, 900);
-loop();
+glass.classList.add("cold"); void glass.offsetWidth;                                     // the valves warm up
+requestAnimationFrame(() => requestAnimationFrame(() => glass.classList.remove("cold")));
+if (!RM) setTimeout(() => { if (!moved && !dragging) target = STATIONS[0].f; }, 900);
+start();
 </script>
 </body>
 </html>
