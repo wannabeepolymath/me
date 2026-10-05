@@ -59,12 +59,13 @@
   /* while a card is held up */
   .held {
     position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); z-index: 4;
-    display: flex; gap: 8px; align-items: center;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; align-items: center;
+    width: max-content; max-width: calc(100vw - 32px);
   }
   .held[hidden] { display: none; }
   .held button { white-space: nowrap; }
   .held .step { width: 42px; padding-left: 0; padding-right: 0; font-size: 18px; }
-  .held .links { display: flex; gap: 8px; }
+  .held .links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
   .held .links[hidden] { display: none; }
   .held .links a {
     font: 600 14px/1 Literata, Georgia, serif; color: var(--ivory); text-decoration: none;
@@ -115,6 +116,7 @@
     .hint { top: 14px; font-size: 14px; white-space: normal; width: calc(100% - 32px); text-align: center; }
     .held { bottom: 118px; }
     .held .links a { padding: 10px 9px 11px; font-size: 13px; }
+    .held .links { order: -1; flex-basis: 100%; } /* project links get their own row above the controls */
   }
   @media (max-width: 560px) { .flat li { aspect-ratio: auto; } }
   @media (prefers-reduced-motion: reduce) {

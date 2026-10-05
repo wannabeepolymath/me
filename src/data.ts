@@ -1,9 +1,15 @@
 export type Suit = 'spades' | 'hearts' | 'diamonds' | 'clubs';
 
+export interface CardLink {
+  label: string;
+  href: string;
+}
+
 interface CardContent {
   trade: string;
   body?: string;
   note?: string;
+  links?: CardLink[]; // shown as buttons under the card while it is held
 }
 
 export interface JokerCard extends CardContent {
@@ -49,23 +55,32 @@ export const DAKSH: DakshContent = {
       body: 'Bangalore. Computer science at BITS Pilani. Builds Burmese on the side. Every other card is a trade.',
       note: 'GitHub bio: &mut self' },
     { rank: 'J', suit: 'hearts', trade: 'founding',
-      body: 'Burmese, a desktop cat for the Mac that reacts to coding agents and keeps reminders. theburmese.xyz' },
+      body: 'Burmese, a desktop cat for the Mac that reacts to coding agents and keeps reminders. theburmese.xyz',
+      links: [{ label: 'Burmese', href: 'https://www.theburmese.xyz/' }, { label: 'Download', href: 'https://github.com/wannabeepolymath/burmese-download' }] },
     { rank: 'J', suit: 'spades', trade: 'agents',
-      body: 'Backend at Emergent in 2025: AI-agent workflows, circuit breakers, 58% less pod memory on Kubernetes.' },
+      body: 'Backend at Emergent in 2025: AI-agent workflows, circuit breakers, 58% less pod memory on Kubernetes.',
+      links: [{ label: 'Emergent', href: 'https://emergent.sh/' }] },
     { rank: 'J', suit: 'spades', trade: 'systems',
-      body: 'mux, Rust WebSockets that keep audio flowing with 36% of backends down. A Redis clone in Go: 20K connections.' },
+      body: 'mux, Rust WebSockets that keep audio flowing with 36% of backends down. A Redis clone in Go: 20K connections.',
+      links: [{ label: 'mux', href: 'https://github.com/wannabeepolymath/mux' }, { label: 'Redis clone', href: 'https://github.com/wannabeepolymath/redis' }] },
     { rank: 'J', suit: 'clubs', trade: 'studies',
-      body: 'A bachelor’s and a master’s at BITS Pilani, through 2027. Built MiniDB there: B+ trees, WAL, 2PL.' },
+      body: 'A bachelor’s and a master’s at BITS Pilani, through 2027. Built MiniDB there: B+ trees, WAL, 2PL.',
+      links: [{ label: 'MiniDB', href: 'https://github.com/wannabeepolymath/miniDB' }] },
     { rank: 'J', suit: 'hearts', trade: 'Mac apps',
-      body: 'Parla, on-device dictation with Whisper on Metal. Branch Visualizer, git in the menu bar, on Homebrew.' },
+      body: 'Parla, on-device dictation with Whisper on Metal. Branch Visualizer, git in the menu bar, on Homebrew.',
+      links: [{ label: 'Parla', href: 'https://github.com/wannabeepolymath/parla' }, { label: 'Branch Visualizer', href: 'https://github.com/wannabeepolymath/git-branch-Visualizer' }] },
     { rank: 'J', suit: 'diamonds', trade: 'markets',
-      body: 'cexy, a matching engine in Rust. An orderbook in C++. IPODesk, AI agents that draft SME IPO documents.' },
+      body: 'cexy, a matching engine in Rust. An orderbook in C++. IPODesk, AI agents that draft SME IPO documents.',
+      links: [{ label: 'cexy', href: 'https://github.com/wannabeepolymath/cexy' }, { label: 'Orderbook', href: 'https://github.com/wannabeepolymath/Orderbook-CPP' }, { label: 'IPODesk', href: 'https://github.com/wannabeepolymath/IPODesk' }] },
     { rank: 'J', suit: 'diamonds', trade: 'chains',
-      body: 'A Solana staking contract in Rust, and a Telegram survival game that pays its winners in SOL.' },
+      body: 'A Solana staking contract in Rust, and a Telegram survival game that pays its winners in SOL.',
+      links: [{ label: 'Staking', href: 'https://github.com/wannabeepolymath/Solana-Staking-Contract' }, { label: 'Survival pot', href: 'https://github.com/wannabeepolymath/Sol-survival-jackpot' }] },
     { rank: 'J', suit: 'clubs', trade: 'security',
-      body: 'PortSwigger lab write-ups and a port scanner in Rust, built on Tokio and Clap.' },
+      body: 'PortSwigger lab write-ups and a port scanner in Rust, built on Tokio and Clap.',
+      links: [{ label: 'PortSwigger labs', href: 'https://github.com/wannabeepolymath/portswigger-labs-writeup' }, { label: 'Port scanner', href: 'https://github.com/wannabeepolymath/port-scanner' }] },
     { rank: 'J', suit: 'diamonds', trade: 'Android',
-      body: 'A native GPS simulator with a Node and Postgres backend, and a Kotlin tool that edits file metadata.' },
+      body: 'A native GPS simulator with a Node and Postgres backend, and a Kotlin tool that edits file metadata.',
+      links: [{ label: 'GPS simulator', href: 'https://github.com/wannabeepolymath/gps-simulation' }, { label: 'Metadata tool', href: 'https://github.com/wannabeepolymath/forensics' }] },
     { rank: 'A', suit: 'spades', trade: 'the maker' }
   ]
 };

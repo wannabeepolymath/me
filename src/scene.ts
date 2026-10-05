@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DAKSH, type Card as CardData, type JokerCard, type JackCard, type Suit } from './data';
+import { DAKSH, type Card as CardData, type JokerCard, type JackCard, type Suit, type CardLink } from './data';
 import { $, isFill, cardLabel, fail } from './fallback';
 import { audio, sfx, toggleSound } from './audio';
 
@@ -483,17 +483,26 @@ export async function startScene(glTimer: number): Promise<void> {
     const seq = faceUp ? order : order.slice().reverse();
     seq.forEach((c, k) => later(k * 58, () => { c.t.flip = faceUp ? 0 : Math.PI; sfx.flip(); }));
   }
+  const MAKER_LINKS: CardLink[] = [{ label: 'Email', href: 'mailto:' + D.email }, { label: 'GitHub', href: D.github }, { label: 'X', href: D.x }];
+  function showLinks(links: CardLink[]) {
+    $('links').replaceChildren(...links.map(({ label, href }) => {
+      const a = document.createElement('a'); a.href = href; a.textContent = label;
+      if (!href.startsWith('mailto:')) { a.target = '_blank'; a.rel = 'noopener'; }
+      return a;
+    }));
+    $('links').hidden = !links.length;
+  }
   function pickUp(c: DeckCard | undefined) {
     if (busy || !c) return;
     if (picked && picked !== c) putBack(true);
     picked = c; c.t.up = 1; c.t.flip = 0; hovered = null;
     sfx.lift();
-    $('held').hidden = false; $('links').hidden = c.data.rank !== 'A';
+    $('held').hidden = false; showLinks(c.data.rank === 'A' ? MAKER_LINKS : c.data.links ?? []);
     $('hint').classList.add('gone');
     const d = c.data;
     $('live').textContent = d.rank === 'A'
       ? `The ace of spades, the maker's card. Write to Daksh at ${D.email}. GitHub and X links are below.`
-      : `${cardLabel(d)}. ${isFill(d.body) ? '' : d.body || ''} ${d.note && !isFill(d.note) ? d.note : ''}`;
+      : `${cardLabel(d)}. ${isFill(d.body) ? '' : d.body || ''} ${d.note && !isFill(d.note) ? d.note : ''}${d.links?.length ? ' Links are below.' : ''}`;
   }
   function putBack(silent = false) {
     if (!picked) return;
@@ -654,7 +663,6 @@ export async function startScene(glTimer: number): Promise<void> {
   $('prev').addEventListener('click', () => step(-1));
   $('next').addEventListener('click', () => step(1));
   if (!matchMedia('(hover: none)').matches) $('hint').textContent = 'Click a card to read it. Drag across the felt to deal them your own way.';
-  $('links').innerHTML = `<a href="mailto:${D.email}">Email</a><a href="${D.github}" target="_blank" rel="noopener">GitHub</a><a href="${D.x}" target="_blank" rel="noopener">X</a>`;
   document.querySelectorAll<HTMLButtonElement>('#index button').forEach((b) => {
     const c = cards[Number(b.dataset.i)]!;
     b.addEventListener('focus', () => { focused = c; });

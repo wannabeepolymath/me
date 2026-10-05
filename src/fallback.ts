@@ -36,7 +36,7 @@ export function renderFallback(): number {
         <p><a href="mailto:${esc(D.email)}">${esc(D.email)}</a></p><p><a href="${esc(D.github)}">${esc(gh)}</a></p><p><a href="${esc(D.x)}">${esc(xx)}</a></p></li>`;
       const kicker = c.rank === 'joker' ? 'The wildcard' : 'Jack of';
       const title = c.rank === 'joker' ? c.title : isFill(c.trade) ? c.trade : c.trade.charAt(0).toUpperCase() + c.trade.slice(1);
-      return `<li><div class="ix${red ? ' red' : ''}">${ix}</div><h3><small>${kicker}</small>${isFill(title) ? `<span class="pencil">${esc(title)}</span>` : esc(title)}</h3>${para(c.body)}${para(c.note)}</li>`;
+      return `<li><div class="ix${red ? ' red' : ''}">${ix}</div><h3><small>${kicker}</small>${isFill(title) ? `<span class="pencil">${esc(title)}</span>` : esc(title)}</h3>${para(c.body)}${para(c.note)}${c.links?.length ? `<p class="links">${c.links.map((l) => `<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join(', ')}</p>` : ''}</li>`;
     }).join('') + '</ol>';
 
   // If the scene never starts (offline assets or a blocked script), show the flat deck
