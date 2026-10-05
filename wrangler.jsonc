@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "daksh-jain",
+  "compatibility_date": "2026-10-05",
+  // Static site only: every .html in the repo root is served as-is; / serves index.html.
+  "assets": {
+    "directory": ".",
+    "not_found_handling": "404-page"
+  },
+  // The zone is on Cloudflare (registered there), so Wrangler creates the DNS records and certs.
+  "routes": [
+    { "pattern": "polymathdaksh.com", "custom_domain": true },
+    { "pattern": "www.polymathdaksh.com", "custom_domain": true }
+  ],
+  "workers_dev": false
+}
