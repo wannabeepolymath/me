@@ -5,7 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Daksh Jain</title>
 <meta name="description" content="A radio tuned to Daksh Jain. Drag the dial between Bangalore, his curiosities, the workshop and the mailbag.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%232a1410%27/%3E%3Crect x=%274%27 y=%278%27 width=%2724%27 height=%2716%27 rx=%273%27 fill=%27%23e9bd52%27/%3E%3Crect x=%2715%27 y=%278%27 width=%272%27 height=%2716%27 fill=%27%23d7331c%27/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a1410'/%3E%3Crect x='3' y='7' width='26' height='18' rx='4' fill='%23e9bd52'/%3E%3Cpath d='M7 10v4M11 10v2M19 10v2M23 10v2M25 10v4M9 18h4M19 18h4' stroke='%231b100a' stroke-width='1.4'/%3E%3Crect x='15.1' y='5' width='1.8' height='22' rx='.9' fill='%23d7331c'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#2a1410">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Daksh Jain">
+<meta property="og:description" content="A radio tuned to Daksh Jain. Drag the dial between Bangalore, his curiosities, the workshop and the mailbag.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Daksh Jain">
+<meta name="twitter:description" content="A radio tuned to Daksh Jain. Drag the dial between Bangalore, his curiosities, the workshop and the mailbag.">
+<meta name="twitter:creator" content="@dakshhjainn">
+<noscript><style>#glass, #eye, #snd, footer .keys { display: none !important; }</style></noscript>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap">
@@ -181,6 +190,10 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
 @keyframes tail { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(14deg); } }
 
+/* ---------- no JavaScript: the essentials, printed on plain glass ---------- */
+.nojs { height: 100%; max-width: none; border-radius: 16px; padding: var(--pad); display: grid; align-content: end; gap: 1rem;
+  background: radial-gradient(120% 95% at 50% 42%, var(--glass-hot) 0%, var(--glass) 36%, var(--glass-edge) 100%); box-shadow: inset 0 0 0 2px rgba(0,0,0,.45), 0 0 0 1px #140906; }
+
 /* ---------- speaker grille: contact is always one glance away ---------- */
 footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1.5rem; padding: .85rem 1rem; border-radius: 10px;
   background: radial-gradient(circle at 2px 2px, #0f0604 1.6px, transparent 1.8px) 0 0 / 7px 7px, #35190f; box-shadow: inset 0 0 0 1px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06);
@@ -232,6 +245,17 @@ kbd { font: 700 .72rem/1 var(--dial); letter-spacing: .06em; padding: .15em .35e
   <div class="legend" id="legend" aria-hidden="true"></div>
   <div class="sr" aria-live="polite" id="live"></div>
 </main>
+
+<noscript>
+  <!-- Shown only without JavaScript. Keep in step with DAKSH below. -->
+  <section class="nojs station on">
+    <div class="freq">630 kHz, Bangalore</div>
+    <h2>You've reached Daksh Jain.</h2>
+    <p>He lives in Bangalore and is studying computer science at BITS Pilani, a bachelor's and a master's back to back, done in 2027. He builds software, and would rather be curious about everything than expert in one thing.</p>
+    <p>This site is a radio, and the dial needs JavaScript to turn. The mailbag is open either way:</p>
+    <div class="links"><a href="mailto:dakshjainn2004@gmail.com">dakshjainn2004@gmail.com</a><a href="https://github.com/wannabeepolymath">github / wannabeepolymath</a><a href="https://x.com/dakshhjainn">x / dakshhjainn</a></div>
+  </section>
+</noscript>
 
 <footer>
   <nav aria-label="Contact">
