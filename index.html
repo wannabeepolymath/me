@@ -411,35 +411,56 @@ function scramble(p) {
   for (const [n, o] of current.nodes) n.data = p <= 0 ? o : o.replace(/\S/g, c => Math.random() < p ? GLYPHS[Math.random() * GLYPHS.length | 0] : c);
 }
 
-/* ---------- sound (built in code, only after the knob is turned) ---------- */
-let ac, gNoise, osc, gOsc, gPurr;
+/* ---------- sound: built in code on the first knob turn, faded in and out, never autoplays ----------
+   static  = pink noise through a 250 Hz–3.2 kHz "speaker" band, with a faint hiss floor so a locked station still sounds alive
+   whistle = the heterodyne you hear just off a station: a sine whose pitch rises with distance, loudest half-way in
+   purr    = a 70–450 Hz rumble (audible on laptop and phone speakers) pulsed at 25 Hz and breathing slowly, only on the unlisted station */
+let ac, master, gNoise, gOsc, osc, gPurr, soundOn = false, sleepT;
 const snd = $("snd");
+function buildAudio() {
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+  ac = new AC();
+  const sr = ac.sampleRate, len = sr * 3, nb = ac.createBuffer(1, len, sr), d = nb.getChannelData(0);
+  let b0 = 0, b1 = 0, b2 = 0;
+  for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; b0 = .99765 * b0 + w * .099046; b1 = .963 * b1 + w * .2965164; b2 = .57 * b2 + w * 1.0526913; d[i] = (b0 + b1 + b2 + w * .1848) * .25; }
+  const fade = 256; for (let i = 0; i < fade; i++) d[len - fade + i] = d[len - fade + i] * (1 - i / fade) + d[i] * (i / fade); // seamless loop
+  const gain = v => { const n = ac.createGain(); n.gain.value = v; return n; };
+  const filt = (type, f, q) => { const n = ac.createBiquadFilter(); n.type = type; n.frequency.value = f; n.Q.value = q; return n; };
+  const lim = ac.createDynamicsCompressor(); lim.threshold.value = -10; lim.knee.value = 6; lim.ratio.value = 12; lim.attack.value = .003; lim.release.value = .2; // safety limiter
+  master = gain(0); master.connect(lim); lim.connect(ac.destination);
+  const src = ac.createBufferSource(); src.buffer = nb; src.loop = true;
+  const hp = filt("highpass", 250, .7), lp = filt("lowpass", 3200, .7);
+  gNoise = gain(0); src.connect(hp); hp.connect(lp); lp.connect(gNoise); gNoise.connect(master);
+  osc = ac.createOscillator(); osc.type = "sine"; osc.frequency.value = 220;
+  gOsc = gain(0); osc.connect(gOsc); gOsc.connect(master);
+  const php = filt("highpass", 70, .7), plp = filt("lowpass", 450, .7), pulse = gain(.5), breath = gain(.65); gPurr = gain(0);
+  const lfo = ac.createOscillator(), lfoD = gain(.5); lfo.frequency.value = 25; lfo.connect(lfoD); lfoD.connect(pulse.gain);
+  const slow = ac.createOscillator(), slowD = gain(.35); slow.frequency.value = .45; slow.connect(slowD); slowD.connect(breath.gain);
+  src.connect(php); php.connect(plp); plp.connect(pulse); pulse.connect(breath); breath.connect(gPurr); gPurr.connect(master);
+  src.start(); osc.start(); lfo.start(); slow.start();
+  return true;
+}
+function soundOut() { // fade the master so switching (or hiding the tab) never clicks, then let the context sleep
+  if (!ac) return;
+  const want = soundOn && !document.hidden, g = master.gain, t = ac.currentTime;
+  clearTimeout(sleepT);
+  if (want && ac.state !== "running") ac.resume();
+  g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(want ? 1 : 0, t + (want ? .3 : .12));
+  if (!want) sleepT = setTimeout(() => { if (!(soundOn && !document.hidden)) ac.suspend(); }, 200);
+}
 snd.addEventListener("click", () => {
-  const on = snd.getAttribute("aria-pressed") !== "true"; snd.setAttribute("aria-pressed", on);
-  if (!ac) {
-    ac = new (window.AudioContext || window.webkitAudioContext)();
-    const len = ac.sampleRate * 2, b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-    const src = ac.createBufferSource(); src.buffer = b; src.loop = true;
-    const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1400; bp.Q.value = .5;
-    gNoise = ac.createGain(); gNoise.gain.value = 0; src.connect(bp).connect(gNoise).connect(ac.destination);
-    osc = ac.createOscillator(); osc.type = "sine"; gOsc = ac.createGain(); gOsc.gain.value = 0; osc.connect(gOsc).connect(ac.destination);
-    const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 140;
-    gPurr = ac.createGain(); gPurr.gain.value = 0;
-    const lfo = ac.createOscillator(); lfo.frequency.value = 24; const lg = ac.createGain(); lg.gain.value = .5;
-    const purrAmp = ac.createGain(); purrAmp.gain.value = .5; lfo.connect(lg).connect(purrAmp.gain);
-    src.connect(lp).connect(purrAmp).connect(gPurr).connect(ac.destination);
-    src.start(); osc.start(); lfo.start();
-  }
-  ac[on ? "resume" : "suspend"]();
+  soundOn = !soundOn;
+  if (soundOn && !ac && !buildAudio()) soundOn = false; // no Web Audio: the knob just stays off
+  snd.setAttribute("aria-pressed", soundOn); soundOut();
 });
+document.addEventListener("visibilitychange", soundOut);
 function audio(sig, s) {
   if (!ac || ac.state !== "running") return;
-  const t = ac.currentTime, d = Math.abs(freq - s.f);
-  gNoise.gain.setTargetAtTime((1 - sig) ** 1.4 * .28, t, .04);
-  gOsc.gain.setTargetAtTime(4 * sig * (1 - sig) * .035, t, .04);
-  osc.frequency.setTargetAtTime(180 + d * 45, t, .04);
-  gPurr.gain.setTargetAtTime(s.secret ? sig * 1.4 : 0, t, .1);
+  const t = ac.currentTime, d = Math.min(Math.abs(freq - s.f), BAND * 1.5);
+  gNoise.gain.setTargetAtTime(.012 + (1 - sig) ** 1.4 * .2, t, .05);
+  gOsc.gain.setTargetAtTime(4 * sig * (1 - sig) * .05, t, .05);
+  osc.frequency.setTargetAtTime(220 + d * 38, t, .05);
+  gPurr.gain.setTargetAtTime(s.secret ? sig * 1.5 : 0, t, .25);
 }
 
 /* ---------- the loop (time-based, so 60/120Hz screens feel the same; stops while the tab is hidden) ---------- */
