@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daksh Jain</title>
+<meta name="description" content="Daksh Jain, backend engineer in Bangalore. Move the lens over the page to see what runs underneath.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112.5,300..600&family=Schibsted+Grotesk:wght@400..900&display=swap">
+<style>
+/*
+  Two layers, one layout.
+  #surface: what a user sees. Quiet, light, sans.
+  #xray:    what runs underneath. Film, bone, mono. Fixed to the viewport, clipped to a circle (the lens),
+            its content translated by -scrollY so each .bone sits exactly over its [data-bone] twin.
+*/
+:root {
+  --lightbox: #E7ECEE;
+  --ink: #0B171D;
+  --ink-2: #4F6068;
+  --film: #061015;
+  --bone: #DCF5F1;
+  --bone-2: #7FA2A6;
+  --fault: #FF5A3C;
+  --glow: rgba(150, 235, 225, .38);
+  --sans: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Martian Mono", ui-monospace, Menlo, monospace;
+  --pad: clamp(1rem, 3vw, 2.75rem);
+  --gap: clamp(1rem, 2vw, 2rem);
+  --t-name: min(21vw, 31svh);
+  --t-head: clamp(2rem, 3.7vw, 3.5rem);
+  --t-quote: clamp(2.125rem, 4.6vw, 4.5rem);
+  --t-twin: clamp(1.25rem, 2.5vw, 2.4rem);
+  --t-h: clamp(1.5rem, 2.2vw, 2rem);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; background: var(--lightbox); }
+body { margin: 0; background: var(--lightbox); color: var(--ink); font: 400 1.0625rem/1.55 var(--sans); overflow-x: hidden; cursor: crosshair; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p, dl, dd, ol, figure { margin: 0; }
+p, figcaption { text-wrap: pretty; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .22em; }
+a:hover { text-decoration-thickness: 2px; }
+a, button { cursor: pointer; }
+:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+#surface :focus-visible { position: relative; z-index: 8; background: var(--lightbox); color: var(--ink); outline-color: var(--ink); box-shadow: 0 0 0 4px var(--lightbox); } /* a focused link always surfaces above the lens */
+::selection { background: var(--ink); color: var(--lightbox); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- shared grid (surface and bones use the same classes so they line up) ---------- */
+.sec { position: relative; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gap); align-content: start; padding: clamp(4rem, 10vh, 7rem) var(--pad) 0; }
+.a { grid-column: 1 / span 4; }
+.b { grid-column: 6 / -1; }
+.h { font: 700 var(--t-h)/1.1 var(--sans); letter-spacing: -.02em; }
+.meta { color: var(--ink-2); margin-top: .4rem; }
+.a > p:not(.meta, .h) { margin-top: 1.1rem; max-width: 36ch; }
+.go { display: inline-block; margin-top: 1rem; font-weight: 600; }
+.quote { font: 500 var(--t-quote)/1.03 var(--sans); letter-spacing: -.035em; text-wrap: balance; }
+.hang { text-indent: -.4em; }
+.ok { font-size: calc(var(--t-quote) * 2.3); line-height: .9; letter-spacing: -.05em; }
+.cap { color: var(--ink-2); margin-top: 1.1rem; max-width: 40ch; }
+.para { font: 500 clamp(1.375rem, 2.2vw, 1.875rem)/1.3 var(--sans); letter-spacing: -.015em; max-width: 30ch; }
+.mail { font: 600 clamp(1.5rem, 3.6vw, 3.25rem)/1.1 var(--sans); letter-spacing: -.03em; overflow-wrap: break-word; }
+.contact { padding-bottom: 9rem; }
+
+/* ---------- hero ---------- */
+.hero { min-height: 100svh; grid-template-rows: auto 1fr; padding-top: 1.25rem; padding-bottom: calc(var(--pad) * .5 + .04 * var(--t-name)); }
+.top { grid-column: 1 / -1; grid-row: 1; display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; font-size: .9375rem; }
+.top nav { display: flex; gap: clamp(1rem, 2vw, 1.75rem); }
+.lede { grid-column: 8 / -1; grid-row: 2; align-self: start; padding-top: clamp(2rem, 9vh, 7rem); }
+.headline { font: 600 var(--t-head)/1.02 var(--sans); letter-spacing: -.03em; max-width: 12ch; text-wrap: balance; }
+.hint { color: var(--ink-2); margin-top: 1.25rem; max-width: 32ch; }
+.name { grid-column: 1 / -1; grid-row: 2; align-self: end; font: 900 var(--t-name)/.87 var(--sans); letter-spacing: -.06em; margin-left: -.045em; }
+.ln { display: block; white-space: nowrap; }
+.name b { font-weight: inherit; position: relative; }
+.name b::before { content: ""; position: absolute; } /* same out-of-flow box on both layers keeps glyph shaping identical, so the x-ray lines up exactly */
+.m { display: inline-block; width: 0; height: .7em; height: 1cap; vertical-align: baseline; position: relative; }
+.coarse { display: none; }
+@media (pointer: coarse) { .fine { display: none; } .coarse { display: inline; } }
+
+/* ---------- the underneath ---------- */
+#xray { position: fixed; inset: 0; z-index: 5; background: var(--film); color: var(--bone); pointer-events: none; overflow: hidden; overflow: clip; clip-path: circle(0 at 50% 50%); font: 400 .8125rem/1.75 var(--mono); font-stretch: 87.5%; }
+#xray::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .09; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.4 -.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+#xray-inner { position: absolute; left: 0; top: 0; width: 100%; will-change: transform;
+  background: linear-gradient(rgba(127, 162, 166, .07) 1px, transparent 1px) 0 0 / 32px 32px, linear-gradient(90deg, rgba(127, 162, 166, .07) 1px, transparent 1px) 0 0 / 32px 32px; }
+.bone { position: absolute; top: 0; left: 0; }
+.bone a { color: var(--bone); }
+.full #xray a { pointer-events: auto; }
+.bone .h { font: 500 var(--t-h)/1.15 var(--mono); font-stretch: 87.5%; letter-spacing: -.03em; overflow-wrap: break-word; }
+.bone .top { font-size: .8125rem; }
+.bone .headline { font-family: var(--mono); font-weight: 400; font-stretch: 87.5%; letter-spacing: -.04em; text-shadow: 0 0 22px var(--glow); }
+.twin { font: 400 var(--t-twin)/1.18 var(--mono); font-stretch: 87.5%; letter-spacing: -.035em; text-shadow: 0 0 20px var(--glow); overflow-wrap: break-word; }
+.twin.ok { font-size: calc(var(--t-quote) * 2.3); line-height: .9; letter-spacing: -.06em; white-space: nowrap; }
+.twin.ok .dim { font-size: .3em; letter-spacing: 0; margin-left: .3em; }
+.twin s { text-decoration-thickness: 2px; }
+.spec { display: grid; grid-template-columns: 6.75em minmax(0, 1fr); gap: .15rem 1rem; margin-top: 1.4rem; }
+.spec dt { color: var(--bone-2); }
+.spec dd { overflow-wrap: break-word; }
+.log { list-style: none; padding: 0; margin-top: 2rem; max-width: 46rem; }
+.log li { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: 1rem; opacity: .62; transition: opacity .25s; overflow-wrap: break-word; }
+.log li.on { opacity: 1; text-shadow: 0 0 12px var(--glow); }
+.log li > :first-child { color: var(--bone-2); }
+.bad, .log li.bad > * { color: var(--fault); }
+.dim { color: var(--bone-2); }
+.bar { display: inline-block; width: calc(8em * var(--w)); height: .55em; margin-right: .7em; background: var(--bone); box-shadow: 0 0 10px var(--glow); }
+.wave { display: flex; align-items: center; gap: 3px; height: 3.5rem; margin-top: 1.75rem; max-width: 30rem; }
+.wave i { flex: 1; height: 100%; background: var(--bone); transform: scaleY(var(--s)); animation: wv 1.2s ease-in-out var(--d) infinite alternate; box-shadow: 0 0 8px var(--glow); }
+@keyframes wv { to { transform: scaleY(calc(var(--s) * .2)); } }
+.mux { display: block; width: 100%; max-width: 34rem; margin-top: 2rem; overflow: visible; filter: drop-shadow(0 0 4px var(--glow)); }
+.mux text { font-family: var(--mono); font-size: 12px; }
+
+/* the name, x-rayed: outlined glyphs, byte values, metric lines */
+.bone .name { color: rgba(220, 245, 241, .04); -webkit-text-stroke: 1.25px var(--bone); text-shadow: 0 0 30px rgba(140, 230, 220, .22); }
+.bone .name b::before { content: attr(data-h); position: absolute; left: .08em; top: var(--lt, 0); font: 500 .6875rem/1 var(--mono); letter-spacing: 0; color: var(--bone-2); -webkit-text-stroke: 0; text-shadow: none; }
+.bone .m::before, .bone .m::after { content: ""; position: absolute; left: 0; width: calc(100vw - 2 * var(--pad)); font: 400 .6875rem/1 var(--mono); letter-spacing: 0; color: var(--bone-2); -webkit-text-stroke: 0; text-shadow: none; text-align: right; }
+.bone .m::before { top: 0; border-top: 1px dashed rgba(127, 162, 166, .5); padding-top: 5px; }
+.bone .m::after { bottom: 0; border-bottom: 1px dashed rgba(127, 162, 166, .5); padding-bottom: 5px; }
+.bone .ln:first-child .m::before { content: "cap height"; }
+.bone .ln:first-child .m::after { content: "baseline"; }
+
+/* ---------- lens, flash, toggle ---------- */
+#lens { display: none; position: fixed; left: 0; top: 0; z-index: 6; pointer-events: none; border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--ink), 0 30px 70px -18px rgba(11, 23, 29, .55), inset 0 0 0 1px rgba(220, 245, 241, .4);
+  background: radial-gradient(circle, transparent 56%, rgba(6, 16, 21, .6) 100%); transition: opacity .35s; }
+.js #lens { display: block; }
+.full #lens { opacity: 0; }
+#lens svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+#flash { position: fixed; inset: 0; z-index: 6; background: #F2FFFD; opacity: 0; pointer-events: none; }
+#flash.go { animation: flash .75s ease-out; }
+@keyframes flash { from { opacity: .85; } to { opacity: 0; } }
+#xr { display: none; position: fixed; right: var(--pad); bottom: calc(var(--pad) + env(safe-area-inset-bottom, 0px)); z-index: 7; align-items: center; gap: .6rem; padding: .7rem 1.05rem .7rem .75rem; border: 0; border-radius: 999px; background: var(--ink); color: var(--lightbox); font: 600 .9375rem/1 var(--sans); letter-spacing: -.01em; box-shadow: 0 12px 30px -12px rgba(11, 23, 29, .7); }
+.js #xr { display: inline-flex; }
+#xr .dot { width: 1rem; height: 1rem; border-radius: 50%; background: var(--film); box-shadow: inset 0 0 0 1.5px var(--bone); }
+#xr[aria-pressed="true"] { background: var(--bone); color: var(--film); box-shadow: 0 0 30px -4px var(--glow); }
+#xr[aria-pressed="true"] .dot { background: var(--fault); box-shadow: none; }
+#xr:focus-visible { outline: 2px solid var(--fault); outline-offset: 3px; }
+
+@media (max-width: 760px) {
+  :root { --t-name: 30vw; }
+  .a, .b, .lede { grid-column: 1 / -1; }
+  .b { margin-top: 2.25rem; }
+  .lede { padding-top: clamp(2.5rem, 9vh, 5rem); }
+  .top { font-size: .875rem; }
+  .bone .top { font-size: .6875rem; }
+  .bone .top p { display: none; }
+  .hero { padding-bottom: 5.75rem; }
+  .hang { text-indent: 0; }
+  .spec { grid-template-columns: 5.75em minmax(0, 1fr); column-gap: .75rem; }
+  .bone .log { display: none; }
+  .contact { padding-bottom: 7rem; }
+}
+@media (max-height: 600px) { .hero { grid-template-rows: auto auto auto; } .name { grid-row: 3; margin-top: 2rem; } }
+@media (prefers-reduced-motion: reduce) {
+  .wave i { animation: none; }
+  .log li { transition: none; }
+  #flash { display: none; }
+}
+@media print { #xray, #lens, #xr, #flash { display: none !important; } }
+</style>
+</head>
+<body>
+
+<main id="surface">
+  <section class="sec hero" data-bone="b-hero">
+    <h1 class="name" aria-label="Daksh Jain"><span class="ln"><i class="m"></i><b>D</b><b>a</b><b>k</b><b>s</b><b>h</b></span><span class="ln"><i class="m"></i><b>J</b><b>a</b><b>i</b><b>n</b></span></h1>
+    <div class="top">
+      <p>Backend engineer in Bangalore</p>
+      <nav aria-label="Elsewhere">
+        <a href="mailto:dakshjainn2004@gmail.com">Email</a>
+        <a href="https://github.com/wannabeepolymath">GitHub</a>
+        <a href="https://x.com/dakshhjainn">X</a>
+      </nav>
+    </div>
+    <div class="lede">
+      <p class="headline">Most of what I build, you’ll never see.</p>
+      <p class="hint"><span class="fine">Move the lens over anything on this page to see what’s running underneath. Press X to see all of it.</span><span class="coarse">Scroll the page through the lens, or tap anywhere to move it, and see what’s running underneath.</span></p>
+    </div>
+  </section>
+
+  <section class="sec" id="about" data-bone="b-about">
+    <h2 class="a h">About</h2>
+    <p class="b para">I’m studying for a bachelor’s and master’s in computer science at BITS Pilani. I like the parts of software people never touch: queues, sockets, retries, and the code that runs when something else breaks.</p>
+  </section>
+
+  <section class="sec" data-bone="b-emergent">
+    <div class="a">
+      <h2 class="sr">Work</h2>
+      <h3 class="h">Emergent</h3>
+      <p class="meta">Backend developer, April to August 2025</p>
+      <p>Built the backend for AI agents that call outside APIs, make decisions, and keep going when those APIs fail.</p>
+    </div>
+    <figure class="b">
+      <p class="quote hang">“Here are three photos of rain in Bangalore.”</p>
+      <figcaption class="cap">What the image agent replies.</figcaption>
+    </figure>
+  </section>
+
+  <section class="sec" data-bone="b-mux">
+    <div class="a">
+      <h2 class="sr">Projects</h2>
+      <h3 class="h">mux</h3>
+      <p>A WebSocket multiplexer in Rust. It routes live audio between phones and GPU text-to-speech workers, and keeps it flowing when workers fail.</p>
+      <a class="go" href="https://github.com/wannabeepolymath/mux">Code on GitHub</a>
+    </div>
+    <figure class="b">
+      <p class="quote hang">“Hi, I’m still here.”</p>
+      <figcaption class="cap">What the caller hears while 36% of the backend is failing.</figcaption>
+    </figure>
+  </section>
+
+  <section class="sec" data-bone="b-parla">
+    <div class="a">
+      <h3 class="h">Parla</h3>
+      <p>Private voice dictation for macOS. Speech is transcribed on your Mac, cleaned up, and typed into whatever app you’re in, in under two seconds.</p>
+      <a class="go" href="https://github.com/wannabeepolymath/parla">Code on GitHub</a>
+    </div>
+    <figure class="b">
+      <p class="quote hang">“Let’s move the sync to Thursday.”</p>
+      <figcaption class="cap">What lands in your text field. What you said was messier.</figcaption>
+    </figure>
+  </section>
+
+  <section class="sec" data-bone="b-redis">
+    <div class="a">
+      <h3 class="h">Redis, from scratch</h3>
+      <p>A Redis server I wrote in Go. It speaks the real wire protocol, so ordinary Redis clients work with it unchanged.</p>
+      <a class="go" href="https://github.com/wannabeepolymath/redis">Code on GitHub</a>
+    </div>
+    <figure class="b">
+      <p class="quote ok">OK</p>
+      <figcaption class="cap">What redis-cli prints after SET city bangalore.</figcaption>
+    </figure>
+  </section>
+
+  <section class="sec" data-bone="b-sol">
+    <div class="a">
+      <h3 class="h">Solana Survival Pot</h3>
+      <p>A Telegram bot with a game inside. It creates wallets, moves SOL, runs an on-chain survival bet, and pays out the prize automatically.</p>
+      <a class="go" href="https://github.com/wannabeepolymath/Sol-survival-jackpot">Code on GitHub</a>
+    </div>
+    <figure class="b">
+      <p class="quote hang">“You survived this round.”</p>
+      <figcaption class="cap">What the bot sends in Telegram.</figcaption>
+    </figure>
+  </section>
+
+  <section class="sec contact" id="contact" data-bone="b-contact">
+    <h2 class="a h">Contact</h2>
+    <div class="b">
+      <a class="mail" href="mailto:dakshjainn2004@gmail.com">dakshjainn2004@gmail.com</a>
+      <p class="cap">Also on <a href="https://github.com/wannabeepolymath">GitHub</a> and <a href="https://x.com/dakshhjainn">X</a>.</p>
+    </div>
+  </section>
+</main>
+
+<div id="xray" aria-hidden="true" inert>
+  <div id="xray-inner">
+
+    <section class="sec hero bone" id="b-hero">
+      <div class="name"><span class="ln"><i class="m"></i><b data-h="44">D</b><b data-h="61">a</b><b data-h="6b">k</b><b data-h="73">s</b><b data-h="68">h</b></span><span class="ln"><i class="m"></i><b data-h="4a">J</b><b data-h="61">a</b><b data-h="69">i</b><b data-h="6e">n</b></span></div>
+      <div class="top">
+        <p>12.97° N, 77.59° E</p>
+        <nav aria-label="Elsewhere">
+          <a href="mailto:dakshjainn2004@gmail.com">mailto</a>
+          <a href="https://github.com/wannabeepolymath">/wannabeepolymath</a>
+          <a href="https://x.com/dakshhjainn">@dakshhjainn</a>
+        </nav>
+      </div>
+      <div class="lede">
+        <p class="headline">Until now.</p>
+        <dl class="spec">
+          <dt>request</dt><dd id="t-req">GET / 200</dd>
+          <dt>served in</dt><dd id="t-ms">a few ms</dd>
+          <dt>page</dt><dd><span id="t-kb">one file</span>, no frameworks</dd>
+          <dt>elements</dt><dd id="t-el">all of them</dd>
+          <dt>lens</dt><dd id="ro">here</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section class="sec bone" id="b-about">
+      <p class="a h">~/about</p>
+      <div class="b">
+        <dl class="spec" style="margin-top:0">
+          <dt>school</dt><dd>BITS Pilani, Birla Institute of Technology and Science</dd>
+          <dt>degree</dt><dd>bachelor’s + master’s, computer science</dd>
+          <dt>dates</dt><dd>jul 2023 → aug 2027</dd>
+          <dt>cgpa</dt><dd>8.66</dd>
+          <dt>languages</dt><dd>rust, python, go, java, typescript, sql</dd>
+          <dt>data</dt><dd>postgresql, redis, mongodb, elasticsearch, dynamodb</dd>
+          <dt>infra</dt><dd>aws, gcp, docker, kubernetes, ci/cd</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section class="sec bone" id="b-emergent">
+      <div class="a">
+        <p class="h">~/work/emergent</p>
+        <dl class="spec">
+          <dt>role</dt><dd>backend developer, apr → aug 2025</dd>
+          <dt>stack</dt><dd>fastapi, python, postgresql, langchain, gcp</dd>
+          <dt>agents</dt><dd>multi-step external api calls and decisions</dd>
+          <dt>images</dt><dd>agent pipeline on unsplash + pexels</dd>
+          <dt>guards</dt><dd>retries, circuit breakers, recovery workflows</dd>
+          <dt>k8s</dt><dd>optimized rollback pipelines<br><span class="bar" style="--w:1"></span>pod memory before<br><span class="bar" style="--w:.42"></span>after, −58%</dd>
+          <dt>ci</dt><dd>test suites, ci validation, slack alerts</dd>
+          <dt>review</dt><dd>40+ pull requests, l3 jira tickets</dd>
+        </dl>
+      </div>
+      <div class="b">
+        <p class="twin"><span class="bad">unsplash: timeout</span><br>pexels: 200, 3 photos</p>
+        <ol class="log">
+          <li><span>0.00s</span><span>plan: find photos, “rain in bangalore”</span></li>
+          <li><span>0.01s</span><span>unsplash GET /search/photos</span></li>
+          <li class="bad"><span>2.01s</span><span>timeout after 2 s</span></li>
+          <li><span>2.41s</span><span>retry 1, backoff 400 ms</span></li>
+          <li class="bad"><span>2.66s</span><span>503 service unavailable</span></li>
+          <li><span>2.66s</span><span>circuit breaker: unsplash open</span></li>
+          <li><span>2.67s</span><span>fallback: pexels GET /v1/search</span></li>
+          <li><span>3.12s</span><span>200, 3 photos</span></li>
+          <li><span>3.13s</span><span>reply sent</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="sec bone" id="b-mux">
+      <div class="a">
+        <p class="h">~/projects/mux</p>
+        <dl class="spec">
+          <dt>code</dt><dd><a href="https://github.com/wannabeepolymath/mux">github.com/<wbr>wannabeepolymath/<wbr>mux</a></dd>
+          <dt>runtime</dt><dd>rust, tokio</dd>
+          <dt>design</dt><dd>lock-free, actor-style, single-owner state</dd>
+          <dt>queues</dt><dd>bounded mpsc channels</dd>
+          <dt>routing</dt><dd>adaptive load balancing</dd>
+          <dt>failure</dt><dd>circuit breakers, per-stream backpressure</dd>
+          <dt>wire</dt><dd>many streams over one websocket</dd>
+          <dt>chaos</dt><dd>36% injected backend failure, throughput held</dd>
+        </dl>
+      </div>
+      <div class="b">
+        <p class="twin"><span class="bad">36% of calls failing</span><br>audio still flowing</p>
+        <svg class="mux" viewBox="0 0 420 250">
+          <g fill="none" stroke="currentColor" stroke-width="1.2">
+            <rect x="1" y="88" width="44" height="74" rx="9"/>
+            <path d="M45 125H170" stroke-width="3"/>
+            <rect x="170" y="100" width="80" height="50"/>
+            <path id="mp1" d="M250 125C292 125 288 32 330 32"/>
+            <path id="mp2" class="bad" stroke-dasharray="3 4" d="M250 125C292 125 288 94 330 94"/>
+            <path id="mp3" d="M250 125C292 125 288 156 330 156"/>
+            <path id="mp4" d="M250 125C292 125 288 218 330 218"/>
+            <rect x="330" y="18" width="88" height="28"/>
+            <rect x="330" y="80" width="88" height="28" class="bad"/>
+            <rect x="330" y="142" width="88" height="28"/>
+            <rect x="330" y="204" width="88" height="28"/>
+          </g>
+          <g fill="currentColor" text-anchor="middle">
+            <text x="210" y="129">mux</text>
+            <text x="374" y="36">gpu 1</text>
+            <text x="374" y="98" class="bad">gpu 2 open</text>
+            <text x="374" y="160">gpu 3</text>
+            <text x="374" y="222">gpu 4</text>
+            <text x="23" y="182">phone</text>
+            <text x="108" y="112" class="dim">1 websocket</text>
+            <text x="108" y="146" class="dim">3 streams</text>
+          </g>
+          <g fill="currentColor">
+            <rect x="-8" y="-4" width="16" height="8"><animateMotion dur="1.5s" begin="0s" repeatCount="indefinite" path="M170 125H45"/></rect>
+            <rect x="-8" y="-4" width="16" height="8" opacity=".6"><animateMotion dur="1.5s" begin="-.5s" repeatCount="indefinite" path="M170 125H45"/></rect>
+            <rect x="-8" y="-4" width="16" height="8" opacity=".35"><animateMotion dur="1.5s" begin="-1s" repeatCount="indefinite" path="M170 125H45"/></rect>
+            <circle r="2.6"><animateMotion dur="1.1s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#mp1"/></animateMotion></circle>
+            <circle r="2.6"><animateMotion dur="1.3s" begin="-.4s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#mp3"/></animateMotion></circle>
+            <circle r="2.6"><animateMotion dur="1.2s" begin="-.8s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#mp4"/></animateMotion></circle>
+            <circle r="2.6" class="bad"><animateMotion dur="1.1s" repeatCount="indefinite" keyPoints="0;.6" keyTimes="0;1" calcMode="linear"><mpath href="#mp2"/></animateMotion><animate attributeName="opacity" values="1;1;0" keyTimes="0;.6;1" dur="1.1s" repeatCount="indefinite"/></circle>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <section class="sec bone" id="b-parla">
+      <div class="a">
+        <p class="h">~/projects/parla</p>
+        <dl class="spec">
+          <dt>code</dt><dd><a href="https://github.com/wannabeepolymath/parla">github.com/<wbr>wannabeepolymath/<wbr>parla</a></dd>
+          <dt>app</dt><dd>swift, swiftui, macos</dd>
+          <dt>speech</dt><dd>whisper.cpp on metal, on device</dd>
+          <dt>cleanup</dt><dd>llm pass: punctuation, grammar, fillers</dd>
+          <dt>insert</dt><dd>accessibility apis, into any app</dd>
+          <dt>trigger</dt><dd>global hotkey, command mode</dd>
+          <dt>latency</dt><dd>under 2 s, end to end</dd>
+        </dl>
+      </div>
+      <div class="b">
+        <p class="twin"><s class="bad">um so</s> let’s <s class="bad">uh</s> move the sync to <s class="bad">like</s> thursday</p>
+        <div class="wave" id="wave"></div>
+        <ol class="log">
+          <li><span>hotkey</span><span>recording starts</span></li>
+          <li><span>whisper</span><span>transcribed on device, metal gpu</span></li>
+          <li class="bad"><span>fillers</span><span>removed: um so, uh, like</span></li>
+          <li><span>tidy</span><span>capitals, apostrophes, full stop</span></li>
+          <li><span>insert</span><span>typed into the focused field</span></li>
+          <li><span>total</span><span>under 2 s</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="sec bone" id="b-redis">
+      <div class="a">
+        <p class="h">~/projects/redis</p>
+        <dl class="spec">
+          <dt>code</dt><dd><a href="https://github.com/wannabeepolymath/redis">github.com/<wbr>wannabeepolymath/<wbr>redis</a></dd>
+          <dt>language</dt><dd>go</dd>
+          <dt>wire</dt><dd>resp, works with real redis clients</dd>
+          <dt>loop</dt><dd>single-threaded epoll event loop</dd>
+          <dt>conns</dt><dd>20k concurrent</dd>
+          <dt>commands</dt><dd>pipelining, multi/exec, ttl expiry</dd>
+          <dt>memory</dt><dd>approximated lru, probabilistic active eviction</dd>
+          <dt>disk</dt><dd>aof persistence, background rewrite</dd>
+        </dl>
+      </div>
+      <div class="b">
+        <p class="twin ok">+OK<span class="dim">\r\n</span></p>
+        <ol class="log">
+          <li><span>in</span><span>*3<span class="dim">\r\n</span>$3<span class="dim">\r\n</span>SET<span class="dim">\r\n</span>$4<span class="dim">\r\n</span>city<span class="dim">\r\n</span>$9<span class="dim">\r\n</span>bangalore<span class="dim">\r\n</span></span></li>
+          <li><span>epoll</span><span>1 socket ready, 20,000 open</span></li>
+          <li><span>parse</span><span>array of 3 bulk strings</span></li>
+          <li><span>exec</span><span>SET city bangalore</span></li>
+          <li><span>aof</span><span>append to log</span></li>
+          <li><span>out</span><span>+OK<span class="dim">\r\n</span></span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="sec bone" id="b-sol">
+      <div class="a">
+        <p class="h">~/projects/solana</p>
+        <dl class="spec">
+          <dt>code</dt><dd><a href="https://github.com/wannabeepolymath/Sol-survival-jackpot">github.com/<wbr>wannabeepolymath/<wbr>Sol-survival-jackpot</a></dd>
+          <dt>runtime</dt><dd>typescript, bun</dd>
+          <dt>bot</dt><dd>telegraf</dd>
+          <dt>wallets</dt><dd>created for each player</dd>
+          <dt>money</dt><dd>sol transfers on chain</dd>
+          <dt>game</dt><dd>on-chain survival betting</dd>
+          <dt>prizes</dt><dd>paid out automatically</dd>
+        </dl>
+      </div>
+      <div class="b">
+        <p class="twin">ctx.reply("You survived this round.")</p>
+        <ol class="log">
+          <li><span>/join</span><span>player joins from telegram</span></li>
+          <li><span>wallet</span><span>created for the player</span></li>
+          <li><span>bet</span><span>sol transferred into the pot</span></li>
+          <li><span>round</span><span>survivors decided</span></li>
+          <li><span>payout</span><span>prize sent on chain, no human step</span></li>
+          <li><span>reply</span><span>message to the chat</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="sec bone contact" id="b-contact">
+      <p class="a h">~/contact</p>
+      <div class="b">
+        <p class="twin"><a href="mailto:dakshjainn2004@gmail.com">RCPT TO:&lt;dakshjainn2004@gmail.com&gt;</a></p>
+        <ol class="log">
+          <li><span>220</span><span>ready when you are</span></li>
+          <li><span>HELO</span><span>you</span></li>
+          <li><span>MAIL</span><span>FROM:&lt;you&gt;</span></li>
+          <li><span>RCPT</span><span>TO:&lt;dakshjainn2004@gmail.com&gt;</span></li>
+          <li><span>250</span><span>ok</span></li>
+        </ol>
+        <dl class="spec">
+          <dt>github</dt><dd><a href="https://github.com/wannabeepolymath">github.com/wannabeepolymath</a></dd>
+          <dt>x</dt><dd><a href="https://x.com/dakshhjainn">x.com/dakshhjainn</a></dd>
+        </dl>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div id="lens" aria-hidden="true"><svg id="ticks"></svg></div>
+<div id="flash" aria-hidden="true"></div>
+<button id="xr" type="button" aria-pressed="false" aria-keyshortcuts="x"><span class="dot" aria-hidden="true"></span>X-ray everything</button>
+
+<script>
+(() => {
+  const d = document, root = d.documentElement, $ = s => d.querySelector(s);
+  root.classList.add('js');
+  const surface = $('#surface'), xray = $('#xray'), inner = $('#xray-inner'), lens = $('#lens'), ticks = $('#ticks'), btn = $('#xr'), flash = $('#flash'), ro = $('#ro');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)'), fine = matchMedia('(pointer: fine)');
+  const pairs = [...d.querySelectorAll('[data-bone]')].map(s => [s, d.getElementById(s.dataset.bone)]);
+
+  let W = innerWidth, H = innerHeight, R = 0;
+  let x = -300, y = H * .7, tx = x, ty = y, r = 0, tr = 0;
+  let full = false, intro = null, raf = 0;
+
+  const radius = () => fine.matches ? Math.round(Math.min(230, Math.max(140, W * .15))) : Math.round(Math.min(150, W * .3));
+  const cover = () => Math.hypot(Math.max(x, W - x), Math.max(y, H - y)) + 4;
+
+  // Each bone sits exactly over its surface twin. A section grows if its underneath needs more room.
+  function layout() {
+    pairs.forEach(([s, b]) => { s.style.minHeight = ''; b.style.cssText = `width:${s.offsetWidth}px`; });
+    pairs.forEach(([s, b]) => { if (b.offsetHeight > s.offsetHeight) s.style.minHeight = b.offsetHeight + 'px'; });
+    const sy = scrollY;
+    pairs.forEach(([s, b]) => { const q = s.getBoundingClientRect(); b.style.cssText = `top:${q.top + sy}px;left:${q.left}px;width:${q.width}px;height:${q.height}px`; });
+    inner.style.height = root.scrollHeight + 'px';
+    xray.querySelectorAll('.name .ln').forEach(ln => ln.style.setProperty('--lt', (ln.querySelector('.m').getBoundingClientRect().top - ln.querySelector('b').getBoundingClientRect().top - 17) + 'px'));
+    scrolled();
+  }
+  function scrolled() { inner.style.transform = `translate3d(0,${-scrollY}px,0)`; readout(); }
+  function readout() { ro.textContent = `x ${Math.round(x)}  y ${Math.round(y + scrollY)}  r ${Math.round(r)}`; }
+
+  function drawTicks() {
+    const n = 96, c = R, out = [];
+    for (let i = 0; i < n; i++) {
+      const a = i / n * Math.PI * 2, r1 = R - (i % 8 ? 7 : 15), r2 = R - 2;
+      out.push(`M${(c + Math.cos(a) * r1).toFixed(1)} ${(c + Math.sin(a) * r1).toFixed(1)}L${(c + Math.cos(a) * r2).toFixed(1)} ${(c + Math.sin(a) * r2).toFixed(1)}`);
+    }
+    ticks.setAttribute('viewBox', `0 0 ${2 * R} ${2 * R}`);
+    ticks.innerHTML = `<path d="${out.join('')}" stroke="#7FA2A6" stroke-width="1"/><path d="M${c - 9} ${c}H${c + 9}M${c} ${c - 9}V${c + 9}" stroke="#DCF5F1" stroke-width="1" opacity=".7"/>`;
+  }
+
+  function resize() {
+    W = innerWidth; H = innerHeight; R = radius();
+    lens.style.width = lens.style.height = 2 * R + 'px';
+    drawTicks();
+    tr = full ? cover() : R;
+    layout(); kick();
+  }
+
+  const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+  function frame(t) {
+    raf = 0;
+    const snap = reduce.matches;
+    if (intro) {
+      const p = Math.min(1, (t - intro.t0) / intro.dur), e = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+      x = tx = intro.x0 + (intro.x1 - intro.x0) * e; y = ty = intro.y;
+      if (p >= 1) intro = null;
+    } else {
+      const k = snap ? 1 : .2;
+      x += (tx - x) * k; y += (ty - y) * k;
+    }
+    if (full) tr = cover();
+    r += (tr - r) * (snap ? 1 : full ? .1 : .16);
+    xray.style.clipPath = `circle(${r.toFixed(1)}px at ${x.toFixed(1)}px ${y.toFixed(1)}px)`;
+    lens.style.transform = `translate3d(${(x - R).toFixed(1)}px,${(y - R).toFixed(1)}px,0) rotate(${(x * .12).toFixed(1)}deg)`;
+    readout();
+    if (intro || Math.abs(tx - x) > .3 || Math.abs(ty - y) > .3 || Math.abs(tr - r) > .3) kick();
+  }
+  const moveTo = (px, py) => { intro = null; tx = px; ty = py; kick(); };
+
+  function setFull(on) {
+    if (on === full) return;
+    full = on;
+    root.classList.toggle('full', on);
+    btn.setAttribute('aria-pressed', on);
+    xray.inert = !on; xray.setAttribute('aria-hidden', String(!on));
+    surface.inert = on; on ? surface.setAttribute('aria-hidden', 'true') : surface.removeAttribute('aria-hidden');
+    intro = null; tx = x; ty = y;
+    tr = on ? cover() : R;
+    if (on && !reduce.matches) { flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go'); }
+    kick();
+  }
+
+  // Input: mouse steers the lens, a tap moves it, keyboard focus pulls it to the focused link.
+  addEventListener('pointermove', e => { if (e.pointerType === 'mouse' && !full) moveTo(e.clientX, e.clientY); }, { passive: true });
+  let down = null;
+  addEventListener('pointerdown', e => { down = e.pointerType === 'mouse' ? null : [e.clientX, e.clientY]; }, { passive: true });
+  addEventListener('pointerup', e => {
+    if (down && !full && !e.target.closest('a,button') && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 12) moveTo(e.clientX, e.clientY);
+    down = null;
+  });
+  d.addEventListener('focusin', e => {
+    if (full) { // bones live in a fixed layer: bring the focused one into view by scrolling the page, not the layer
+      if (!xray.contains(e.target)) return;
+      xray.scrollTop = 0;
+      const q = e.target.getBoundingClientRect();
+      if (q.top < 80 || q.bottom > H - 80) scrollBy(0, q.top - H * .4);
+      return;
+    }
+    if (!e.target.matches(':focus-visible') || e.target === btn) return;
+    requestAnimationFrame(() => { const q = e.target.getBoundingClientRect(); moveTo(q.left + q.width / 2, q.top + q.height / 2); });
+  });
+  btn.addEventListener('click', () => setFull(!full));
+  addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+    if (e.key === 'x' || e.key === 'X') setFull(!full);
+    else if (e.key === 'Escape') setFull(false);
+  });
+  addEventListener('scroll', scrolled, { passive: true });
+  addEventListener('resize', resize);
+  new ResizeObserver(() => requestAnimationFrame(layout)).observe(surface);
+
+  // Underneath details: real numbers for this page, a waveform, a playhead stepping through each log.
+  const stats = () => {
+    const nav = performance.getEntriesByType('navigation')[0];
+    $('#t-req').textContent = `GET /${location.pathname.split('/').pop()} ${nav && nav.responseStatus || 200}`;
+    if (nav && nav.responseEnd > nav.requestStart) $('#t-ms').textContent = Math.max(1, Math.round(nav.responseEnd - nav.requestStart)) + ' ms';
+    $('#t-kb').textContent = ((nav && nav.decodedBodySize || root.outerHTML.length) / 1024).toFixed(1) + ' kB';
+    $('#t-el').textContent = d.getElementsByTagName('*').length.toLocaleString('en');
+  };
+  d.readyState === 'complete' ? stats() : addEventListener('load', stats);
+  $('#wave').innerHTML = Array.from({ length: 44 }, (_, i) => `<i style="--s:${(.25 + .75 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * .45))).toFixed(2)};--d:${(-i * .09).toFixed(2)}s"></i>`).join('');
+  const logs = [...d.querySelectorAll('.log')];
+  if (reduce.matches) {
+    logs.forEach(l => [...l.children].forEach(n => n.classList.add('on')));
+    d.querySelectorAll('svg.mux').forEach(s => { s.pauseAnimations(); s.setCurrentTime(.7); });
+  } else {
+    setInterval(() => {
+      if (!full && r < 2) return;
+      logs.forEach(l => { const i = (+l.dataset.i || 0) % l.children.length; [...l.children].forEach((n, j) => n.classList.toggle('on', j === i)); l.dataset.i = i + 1; });
+    }, 700);
+  }
+
+  // One orchestrated moment: the lens opens and sweeps across the name, then parks on it.
+  resize();
+  const start = () => {
+    layout();
+    const rg = d.createRange(); rg.selectNodeContents(surface.querySelector('.name .ln')); const q = rg.getBoundingClientRect();
+    const px = q.bottom > 0 && q.top < H ? q.left + q.width * .58 : W * .5, py = q.bottom > 0 && q.top < H ? q.top + q.height * .5 : H * .6;
+    if (reduce.matches) { x = tx = px; y = ty = py; r = tr = R; }
+    else { x = -R; y = py; intro = { t0: performance.now(), dur: 1600, x0: -R, x1: px, y: py }; }
+    kick();
+  };
+  d.fonts && d.fonts.ready ? d.fonts.ready.then(start) : start();
+})();
+</script>
+</body>
+</html>

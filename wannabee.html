@@ -1,0 +1,1050 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daksh Jain</title>
+<meta name="description" content="Daksh Jain's meadow. You're the bee: land on a flower to see what he's into.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2l12 7v14l-12 7-12-7V9z' fill='%23F5A01A'/%3E%3Cpath d='M10 13h12M9 17h14M10 21h12' stroke='%232A0E33' stroke-width='2.4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Schibsted+Grotesk:ital,wght@0,400..700;1,400..600&display=swap">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+<style>
+/*
+  Wannabee: a meadow at bee scale, in honey light.
+  Tokens: honey sky, plum ink, violet seed packet, paper tags. One verb everywhere: land.
+*/
+:root {
+  --honey: #F5A01A;   /* sky, pollen */
+  --glow: #FFE3A1;    /* low sun haze, headings on dark */
+  --paper: #FFF2CC;   /* plant tags, text on dark */
+  --plum: #2A0E33;    /* ink */
+  --violet: #6A2BD6;  /* the seed packet */
+  --display: "Shrikhand", Georgia, serif;
+  --body: "Schibsted Grotesk", system-ui, sans-serif;
+  --gut: clamp(16px, 3vw, 44px);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  overflow: hidden;
+  background: linear-gradient(#E9840C, #FFB43A 45%, #FFDC92 68%, #56691A 68.2%);
+  color: var(--plum);
+  font: 400 1.0625rem/1.55 var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+/* film grain, generated */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 20; pointer-events: none; opacity: .2; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .05 0 0 0 0 .2 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--plum); outline-offset: 3px; }
+#meadow { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: manipulation; }
+#meadow.point { cursor: pointer; }
+
+/* ---- the seed packet: who he is, always visible ---- */
+.packet {
+  position: fixed; z-index: 4; top: var(--gut); left: var(--gut);
+  width: min(22.5rem, calc(100vw - 32px));
+  padding: 1.5rem 1.5rem 1.25rem;
+  background: var(--violet); color: var(--paper);
+  border-radius: 0 0 14px 14px;
+  transform: rotate(-1.2deg);
+  box-shadow: 0 1.6rem 3rem -1.6rem rgb(42 14 51 / .75);
+  transition: transform .45s cubic-bezier(.3, .8, .3, 1), visibility 0s;
+}
+.packet::before { /* crimped top edge */
+  content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 7px;
+  background: conic-gradient(from 135deg at 50% 0, var(--violet) 90deg, transparent 0) 0 0 / 14px 7px repeat-x;
+}
+.packet h1 { margin: 0; font: 400 clamp(2.3rem, 3.6vw, 3rem)/1 var(--display); color: var(--glow); }
+.latin { margin: .3rem 0 .9rem; font-style: italic; color: rgb(255 242 204 / .78); }
+.intro { margin: 0 0 1rem; max-width: 34ch; }
+.links { display: flex; flex-wrap: wrap; gap: .45rem; margin: 0; padding: 0; list-style: none; }
+.links a {
+  display: inline-block; padding: .42rem .9rem; border-radius: 999px;
+  background: var(--paper); color: var(--plum); font-weight: 650; text-decoration: none;
+}
+.links a:hover { background: var(--glow); }
+.packet :focus-visible, .note :focus-visible { outline-color: var(--glow); }
+
+/* ---- plant tags hanging under each flower ---- */
+#tags { position: fixed; inset: 0; z-index: 3; pointer-events: none; transition: opacity .35s; }
+#tags.away { opacity: 0; visibility: hidden; transition: opacity .35s, visibility 0s .35s; }
+.tag {
+  position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer;
+  display: flex; align-items: center; gap: .45em; white-space: nowrap;
+  padding: .45em .85em .5em .55em; border: 0; border-radius: 7px;
+  font: 400 1.02rem/1 var(--display); color: var(--plum); background: var(--paper);
+  box-shadow: 0 3px 0 rgb(42 14 51 / .4);
+  will-change: transform;
+}
+.tag::before { /* tie hole, tinted with the flower's colour */
+  content: ""; flex: none; width: .62em; height: .62em; border-radius: 50%;
+  background: var(--c); box-shadow: inset 0 0 0 2px var(--plum);
+}
+.tag small { font: italic 500 .78rem/1 var(--body); opacity: .75; }
+.tag.bud { background: rgb(255 242 204 / .74); }
+.tag.hot, .tag:hover { background: #fff; }
+.tag.seen::after {
+  content: ""; width: .6em; height: .68em; background: var(--honey);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+
+/* ---- the bee's own label, until the first landing ---- */
+#you {
+  position: fixed; left: 0; top: 0; z-index: 3; pointer-events: none; white-space: nowrap;
+  padding: .45rem .75rem; border-radius: 10px;
+  background: var(--plum); color: var(--paper); font: 600 .92rem/1.2 var(--body);
+  transition: opacity .5s;
+}
+#you::after {
+  content: ""; position: absolute; left: 50%; top: 100%; margin-left: -6px;
+  border: 6px solid transparent; border-top-color: var(--plum);
+}
+#you.gone { opacity: 0 !important; }
+
+/* ---- pollen meter ---- */
+.pollen {
+  position: fixed; z-index: 3; left: var(--gut); bottom: var(--gut);
+  display: flex; align-items: center; gap: .7rem;
+  padding: .5rem .95rem .5rem .75rem; border-radius: 999px;
+  background: rgb(42 14 51 / .8); color: var(--paper); font-size: .9rem;
+}
+.pollen p { margin: 0; }
+.cells { display: flex; gap: 3px; }
+.cells i {
+  width: 11px; height: 13px; background: rgb(255 242 204 / .25);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  transition: background .4s;
+}
+.cells i.on { background: var(--honey); }
+.pollen button {
+  border: 0; padding: .2rem .65rem; border-radius: 999px; cursor: pointer;
+  background: var(--honey); color: var(--plum); font: 650 .85rem/1.4 var(--body);
+}
+
+/* ---- what you find when you land ---- */
+.note {
+  position: fixed; z-index: 6; top: 50%; right: var(--gut);
+  width: min(27rem, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto;
+  padding: 1.7rem 1.75rem 1.4rem;
+  background: var(--plum); color: var(--paper);
+  border-radius: 22px; border-top: 8px solid var(--c, var(--honey));
+  box-shadow: 0 2rem 4rem -2rem rgb(42 14 51 / .85);
+  transform: translateY(-50%);
+  animation: noteIn .45s cubic-bezier(.2, .9, .3, 1.15);
+}
+.note[hidden] { display: none; }
+@keyframes noteIn { from { opacity: 0; transform: translate(24px, -50%) rotate(2deg); } }
+.note h2 { margin: 0; font: 400 clamp(2rem, 3.2vw, 2.7rem)/1.05 var(--display); color: var(--glow); outline: none; }
+.landed { margin: .35rem 0 1.15rem; font-style: italic; color: rgb(255 242 204 / .7); }
+.note p { margin: 0 0 .85rem; max-width: 60ch; }
+.note ul { margin: 0 0 1rem; padding-left: 1.15rem; }
+.note li { margin: .25rem 0; }
+.note li::marker { color: var(--honey); }
+.fill {
+  padding-left: .75rem; border-left: 2px dashed rgb(255 227 161 / .55);
+  font-style: italic; color: rgb(255 242 204 / .62);
+}
+.note a { color: var(--glow); text-underline-offset: .2em; }
+.actions { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1.25rem; }
+.actions button {
+  border: 0; border-radius: 999px; padding: .65rem 1.15rem; cursor: pointer;
+  font: 650 1rem/1 var(--body);
+}
+#next { background: var(--glow); color: var(--plum); }
+#close { background: transparent; color: var(--paper); box-shadow: inset 0 0 0 2px rgb(255 242 204 / .4); }
+
+/* ---- phones ---- */
+@media (max-width: 700px) {
+  .packet { padding: 1.1rem 1.1rem 1rem; transform: rotate(-.8deg); }
+  .packet h1 { font-size: 2.1rem; }
+  .latin { margin-bottom: .55rem; font-size: .95rem; }
+  .intro { margin-bottom: .75rem; font-size: .95rem; line-height: 1.45; }
+  .links a { padding: .36rem .8rem; font-size: .95rem; }
+  .tag { font-size: .9rem; }
+  .tag small { display: none; }
+  .pollen { font-size: .82rem; }
+}
+/* narrow screens: the note becomes a bottom sheet */
+@media (max-width: 900px) and (min-height: 521px) {
+  .note {
+    top: auto; right: 16px; left: 16px; bottom: 16px; width: auto; max-height: 54dvh;
+    padding: 1.3rem 1.3rem 1.1rem; transform: none; animation-name: sheetIn;
+  }
+  @keyframes sheetIn { from { opacity: 0; transform: translateY(30px); } }
+  .landed { margin-bottom: .8rem; }
+}
+
+/* ---- short screens (phones on their side) ---- */
+@media (max-height: 520px) {
+  .packet { width: min(25rem, 52vw); padding: .85rem 1rem .9rem; }
+  .packet h1 { font-size: 1.8rem; }
+  .latin { display: none; }
+  .intro { margin: .45rem 0 .6rem; font-size: .86rem; line-height: 1.4; max-width: none; }
+  .links a { padding: .3rem .75rem; font-size: .88rem; }
+  .note { max-height: calc(100dvh - 24px); padding: 1.1rem 1.3rem 1rem; }
+  .tag { font-size: .86rem; }
+  .tag small, .pollen p { display: none; }
+}
+/* small screens: the packet tucks away while you read a note */
+@media (max-width: 900px), (max-height: 520px) {
+  .is-landed .packet {
+    transform: translateY(calc(-100% - 40px)); visibility: hidden;
+    transition: transform .45s cubic-bezier(.3, .8, .3, 1), visibility 0s .45s;
+  }
+}
+
+/* ---- no WebGL: the tags become a plain list over the painted sky ---- */
+.no-gl #meadow, .no-gl #you { display: none; }
+.no-gl #tags {
+  inset: auto var(--gut) calc(var(--gut) + 64px);
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .6rem;
+}
+.no-gl .tag { position: static; transform: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .note { animation: none; }
+  .packet, .is-landed .packet { transition: none; }
+  #tags, #you, .cells i { transition: none; }
+}
+</style>
+</head>
+<body>
+<canvas id="meadow" aria-hidden="true"></canvas>
+
+<header class="packet">
+  <h1 id="p-name">Daksh Jain</h1>
+  <p class="latin" id="p-latin"></p>
+  <p class="intro" id="p-intro"></p>
+  <ul class="links" aria-label="Contact">
+    <li><a id="l-mail" href="#">Email</a></li>
+    <li><a id="l-gh" href="#" rel="me noopener" target="_blank">GitHub</a></li>
+    <li><a id="l-x" href="#" rel="me noopener" target="_blank">X (Twitter)</a></li>
+  </ul>
+</header>
+
+<nav id="tags" aria-label="Flowers in the meadow"></nav>
+<div id="you" aria-hidden="true">This is you. Land on a flower.</div>
+
+<div class="pollen" aria-live="polite">
+  <span class="cells" aria-hidden="true"></span>
+  <p id="pollen-text">No pollen yet</p>
+</div>
+
+<aside class="note" id="note" role="dialog" aria-labelledby="note-title" hidden>
+  <h2 id="note-title" tabindex="-1"></h2>
+  <p class="landed" id="note-landed"></p>
+  <div id="note-body"></div>
+  <div class="actions">
+    <button id="next" type="button">Next flower</button>
+    <button id="close" type="button">Take off</button>
+  </div>
+</aside>
+
+<script type="module">
+/* =====================================================================
+   EDIT ME. Everything the site says lives here.
+   A flower blooms as soon as at least one of its lines is filled in.
+   If every line still starts with "[fill", it stays a closed bud.
+   species: daisy | sunflower | cosmos | poppy | allium
+   ===================================================================== */
+const DAKSH = {
+  name: 'Daksh Jain',
+  latin: 'Polymathus wannabee',
+  intro: 'Grows in Bangalore. Studying computer science at BITS Pilani until 2027. Builds software, and keeps wandering into other fields.',
+  email: 'dakshjainn2004@gmail.com',
+  github: 'https://github.com/wannabeepolymath',
+  x: 'https://x.com/dakshhjainn',
+  flowers: [
+    { title: 'Why a bee?', species: 'daisy', color: '#FFFFFF', lines: [
+      'His handle is wannabeepolymath. Read it twice: wanna-bee polymath.',
+      'A bee visits hundreds of flowers a day and makes one thing out of all of them. That is roughly the plan.',
+    ] },
+    { title: 'Bangalore', species: 'sunflower', color: '#FFC21A', lines: [
+      'Home. The city was nicknamed the Garden City long before this meadow existed.',
+      '[fill: a place in Bangalore you would take a visitor]',
+    ] },
+    { title: 'BITS Pilani', species: 'poppy', color: '#FF4B2B', lines: [
+      'Studying computer science there: a bachelor’s and a master’s, finishing in 2027.',
+      '[fill: a class, club or corner of campus you love]',
+    ] },
+    { title: 'Building things', species: 'allium', color: '#9152F2', lines: [
+      'Mostly the parts of software nobody sees: servers, sockets, caches and queues.',
+      'A few recent ones:',
+    ], list: [
+      'A WebSocket multiplexer in Rust',
+      'A Redis clone in Go',
+      'Parla, a voice-dictation app for macOS',
+      'A Solana game you play inside Telegram',
+      'Backends for AI agents at Emergent',
+    ], link: { label: 'See the code on GitHub', href: 'https://github.com/wannabeepolymath' } },
+    { title: 'Burmese', species: 'cosmos', color: '#FF6FA8', lines: [
+      'A small companion he made that lives on your desktop.',
+      '[fill: what Burmese does, and where to get it]',
+    ] },
+    { title: 'Music', species: 'cosmos', color: '#FF8A1F', lines: ['[fill: what is on repeat right now]'] },
+    { title: 'Books', species: 'poppy', color: '#7A3CE0', lines: ['[fill: a book you keep pressing into people’s hands]'] },
+    { title: 'Learning now', species: 'daisy', color: '#FFB3D1', lines: ['[fill: something non-technical you are learning]'] },
+    { title: 'Food', species: 'sunflower', color: '#FF9F1C', lines: ['[fill: the dish you would cross Bangalore for]'] },
+  ],
+};
+/* ===================================================================== */
+
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const COARSE = matchMedia('(pointer: coarse)').matches;
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const isFill = (s) => /^\s*\[fill/i.test(s);
+const blooms = (f) => f.lines.some((l) => !isFill(l)) || (f.list && f.list.length > 0);
+const ON_A = { daisy: 'a daisy', sunflower: 'a sunflower', cosmos: 'a cosmos', poppy: 'a poppy', allium: 'an allium' };
+
+/* ---------- packet ---------- */
+$('#p-name').textContent = DAKSH.name;
+$('#p-latin').textContent = DAKSH.latin;
+$('#p-intro').textContent = DAKSH.intro;
+$('#l-mail').href = 'mailto:' + DAKSH.email;
+$('#l-gh').href = DAKSH.github;
+$('#l-x').href = DAKSH.x;
+if (COARSE) $('#you').textContent = 'This is you. Tap a flower to land.';
+
+/* ---------- items: flowers + the hive ---------- */
+const items = DAKSH.flowers.map((f) => ({ ...f, kind: blooms(f) ? f.species : 'bud' }));
+const NF = items.length;
+items.push({ title: 'Say hello', kind: 'hive', color: '#E2A83F' });
+const HIVE = NF;
+
+const tagsEl = $('#tags');
+const tags = items.map((it, i) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'tag' + (it.kind === 'bud' ? ' bud' : '');
+  b.style.setProperty('--c', it.color);
+  b.innerHTML = `<span>${esc(it.title)}</span>` + (it.kind === 'bud' ? '<small>still a bud</small>' : '');
+  b.addEventListener('click', () => land(i));
+  tagsEl.append(b);
+  return b;
+});
+
+/* ---------- pollen ---------- */
+const seen = new Set();
+const cells = $('.cells');
+for (let i = 0; i < NF; i++) cells.append(document.createElement('i'));
+function markVisited(i) {
+  if (i >= NF || seen.has(i)) return;
+  seen.add(i);
+  tags[i].classList.add('seen');
+  cells.children[seen.size - 1].classList.add('on');
+  const t = $('#pollen-text');
+  if (seen.size === NF) {
+    t.innerHTML = 'Every flower visited. ';
+    const go = document.createElement('button');
+    go.type = 'button'; go.textContent = 'Fly to the hive';
+    go.addEventListener('click', () => land(HIVE));
+    t.append(go);
+  } else {
+    t.textContent = `Pollen from ${seen.size} of ${NF} flowers`;
+  }
+  world?.setPollen(seen.size / NF);
+}
+
+/* ---------- the note ---------- */
+const note = $('#note');
+let current = -1;
+function fillNote(i) {
+  const it = items[i];
+  note.style.setProperty('--c', it.color);
+  $('#note-title').textContent = it.title;
+  let html = '';
+  if (it.kind === 'hive') {
+    $('#note-landed').textContent = 'Landed at the hive.';
+    html = `<p>Email is the quickest way to reach him. He also posts on X and keeps his code on GitHub.</p>
+      <ul><li><a href="mailto:${esc(DAKSH.email)}">${esc(DAKSH.email)}</a></li>
+      <li><a href="${esc(DAKSH.github)}" target="_blank" rel="noopener">${esc(DAKSH.github.replace(/^https?:\/\//, ''))}</a></li>
+      <li><a href="${esc(DAKSH.x)}" target="_blank" rel="noopener">${esc(DAKSH.x.replace(/^https?:\/\//, ''))}</a></li></ul>`;
+  } else {
+    $('#note-landed').textContent = it.kind === 'bud'
+      ? 'Landed on a bud. This one hasn’t bloomed yet.'
+      : `Landed on ${ON_A[it.kind] || 'a flower'}.`;
+    html = it.lines.map((l) => `<p${isFill(l) ? ' class="fill"' : ''}>${esc(l)}</p>`).join('');
+    if (it.list) html += '<ul>' + it.list.map((l) => `<li>${esc(l)}</li>`).join('') + '</ul>';
+    if (it.link) html += `<p><a href="${esc(it.link.href)}" target="_blank" rel="noopener">${esc(it.link.label)}</a></p>`;
+  }
+  $('#note-body').innerHTML = html;
+  $('#next').textContent = i === HIVE ? 'Back to the flowers' : 'Next flower';
+}
+function land(i) {
+  current = i;
+  fillNote(i);
+  note.hidden = false;
+  note.scrollTop = 0;
+  document.body.classList.add('is-landed');
+  tagsEl.classList.add('away');
+  $('#you').classList.add('gone');
+  $('#note-title').focus({ preventScroll: true });
+  if (world) world.land(i); else markVisited(i);
+}
+function takeOff() {
+  if (current < 0) return;
+  const was = current;
+  current = -1;
+  note.hidden = true;
+  document.body.classList.remove('is-landed');
+  tagsEl.classList.remove('away');
+  world?.takeOff();
+  tags[was]?.focus({ preventScroll: true });
+}
+$('#close').addEventListener('click', takeOff);
+$('#next').addEventListener('click', () => land(current === HIVE ? 0 : (current + 1) % NF));
+addEventListener('keydown', (e) => { if (e.key === 'Escape') takeOff(); });
+
+/* =====================================================================
+   The meadow (three.js). If anything here fails, the page still works
+   as a seed packet plus a list of tags.
+   ===================================================================== */
+let world = null;
+try { world = await makeWorld(); }
+catch (err) { console.warn('Meadow unavailable, showing the list instead.', err); document.body.classList.add('no-gl'); }
+
+async function makeWorld() {
+  const THREE = await import('three');
+  const { mergeGeometries } = await import('three/addons/utils/BufferGeometryUtils.js');
+  const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
+  const TAU = Math.PI * 2;
+  const UP = V(0, 1, 0);
+
+  // seeded random so the meadow grows the same way every visit
+  let s = 20041;
+  const rand = () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+
+  const canvas = $('#meadow');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.toneMapping = THREE.NeutralToneMapping;
+  renderer.toneMappingExposure = 1.05;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+  const HAZE = new THREE.Color('#FFD68A');
+  scene.fog = new THREE.Fog(HAZE, 18, 90);
+  const SUN = V(0.34, 0.12, -1).normalize();
+
+  scene.add(new THREE.HemisphereLight('#FFD58A', '#4C5C14', 1.7));
+  const key = new THREE.DirectionalLight('#FFF0D2', 1.5); key.position.set(-8, 12, 14); scene.add(key);
+  const rim = new THREE.DirectionalLight('#FFB23E', 2.4); rim.position.copy(SUN).multiplyScalar(60); scene.add(rim);
+
+  /* --- sky: honey, with a low sun behind the flowers --- */
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(450, 32, 16), new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false,
+    uniforms: {
+      top: { value: new THREE.Color('#E57E08') }, mid: { value: new THREE.Color('#FFB23A') },
+      low: { value: HAZE }, sunCol: { value: new THREE.Color('#FFF7DA') }, sunDir: { value: SUN },
+    },
+    vertexShader: 'varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform vec3 top, mid, low, sunCol, sunDir; varying vec3 vP;
+      void main(){
+        vec3 d = normalize(vP); float h = d.y;
+        vec3 c = mix(low, mid, smoothstep(-0.02, 0.2, h));
+        c = mix(c, top, smoothstep(0.18, 0.7, h));
+        float s = max(dot(d, sunDir), 0.0);
+        c += sunCol * (smoothstep(0.9994, 0.9997, s) * 1.6 + pow(s, 60.0) * 0.45 + pow(s, 7.0) * 0.22);
+        gl_FragColor = vec4(c, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`,
+  }));
+  scene.add(sky);
+
+  /* --- ground + a forest of grass blades --- */
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(500, 500).rotateX(-Math.PI / 2),
+    new THREE.MeshStandardMaterial({ color: '#4E6316', roughness: 1 }));
+  scene.add(ground);
+
+  const uTime = { value: 0 };
+  const blade = new THREE.PlaneGeometry(0.14, 1, 1, 5);
+  {
+    const p = blade.attributes.position, col = [];
+    const a = new THREE.Color('#263B0C'), b = new THREE.Color('#BFD052'), c = new THREE.Color();
+    for (let i = 0; i < p.count; i++) {
+      const v = p.getY(i) + 0.5;
+      p.setXYZ(i, p.getX(i) * (1 - v * 0.9), v, v * v * 0.35);
+      c.copy(a).lerp(b, Math.pow(v, 1.4)); col.push(c.r, c.g, c.b);
+    }
+    blade.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    blade.computeVertexNormals();
+  }
+  const grassMat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.85 });
+  grassMat.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = uTime;
+    sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+      vec3 ip = instanceMatrix[3].xyz; float k = position.y * position.y;
+      transformed.x += sin(uTime * 1.3 + ip.x * 0.35 + ip.z * 0.2) * 0.22 * k;
+      transformed.z += cos(uTime * 1.05 + ip.x * 0.2) * 0.12 * k;`);
+  };
+  const GN = COARSE ? 6000 : 9000;
+  const grass = new THREE.InstancedMesh(blade, grassMat, GN);
+  {
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), c = new THREE.Color();
+    for (let i = 0; i < GN; i++) {
+      const z = 8 - Math.pow(rand(), 0.75) * 62;
+      const x = (rand() - 0.5) * (40 + (8 - z) * 1.2);
+      const near = z > 2 ? 0.6 : 1;
+      const h = (0.45 + Math.pow(rand(), 2.2) * 2.3) * near;
+      const w = 0.8 + rand() * 1.3;
+      q.setFromAxisAngle(UP, rand() * TAU);
+      m.compose(V(x, 0, z), q, V(w, h, w));
+      grass.setMatrixAt(i, m);
+      c.setHSL(0.2 + rand() * 0.06, 0.6, 0.45 + rand() * 0.25); grass.setColorAt(i, c);
+    }
+  }
+  scene.add(grass);
+
+  /* --- pollen dust drifting in the light --- */
+  {
+    const n = 420, pos = new Float32Array(n * 3), seed = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      pos.set([(rand() - 0.5) * 44, rand() * 15, 8 - rand() * 40], i * 3); seed[i] = rand();
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('seed', new THREE.BufferAttribute(seed, 1));
+    const dust = new THREE.Points(g, new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      uniforms: { uTime, uPR: { value: renderer.getPixelRatio() } },
+      vertexShader: `attribute float seed; uniform float uTime, uPR; varying float vA;
+        void main(){ vec3 p = position;
+          p.x += sin(uTime * 0.21 + seed * 6.0) * 0.8; p.y += sin(uTime * 0.33 + seed * 9.0) * 0.5; p.z += cos(uTime * 0.17 + seed * 4.0) * 0.6;
+          vec4 mv = modelViewMatrix * vec4(p, 1.0);
+          gl_PointSize = (1.5 + seed * 4.5) * uPR * (16.0 / -mv.z);
+          gl_Position = projectionMatrix * mv; vA = 0.3 + 0.7 * fract(seed * 13.7); }`,
+      fragmentShader: `varying float vA; void main(){ float d = length(gl_PointCoord - 0.5);
+        gl_FragColor = vec4(1.0, 0.95, 0.75, smoothstep(0.5, 0.0, d) * vA * 0.75); }`,
+    }));
+    dust.frustumCulled = false;
+    scene.add(dust);
+  }
+
+  /* ================= geometry kit ================= */
+  const tmpC = new THREE.Color();
+  function part(geo, hex, m) {
+    const g = geo.index ? geo.toNonIndexed() : geo.clone();
+    for (const k of Object.keys(g.attributes)) if (k !== 'position' && k !== 'normal') g.deleteAttribute(k);
+    if (m) g.applyMatrix4(m);
+    tmpC.set(hex);
+    const n = g.attributes.position.count, a = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { a[i * 3] = tmpC.r; a[i * 3 + 1] = tmpC.g; a[i * 3 + 2] = tmpC.b; }
+    g.setAttribute('color', new THREE.BufferAttribute(a, 3));
+    return g;
+  }
+  const M4 = () => new THREE.Matrix4();
+  const T = (x, y, z) => (x.isVector3 ? M4().makeTranslation(x.x, x.y, x.z) : M4().makeTranslation(x, y, z));
+  const RX = (a) => M4().makeRotationX(a), RY = (a) => M4().makeRotationY(a), RZ = (a) => M4().makeRotationZ(a);
+  const SC = (x, y = x, z = x) => M4().makeScale(x, y, z);
+  const mul = (...ms) => ms.reduce((acc, m) => acc.multiply(m), M4());
+  const shade = (hex, k) => '#' + new THREE.Color(hex).multiplyScalar(k).getHexString();
+  const mix = (a, b, k) => '#' + new THREE.Color(a).lerp(new THREE.Color(b), k).getHexString();
+
+  // a petal lying along +X, face up (+Y). a/b shape the outline, blunt squares the tip, notch scallops it.
+  function petal(len, wid, { a = 1.4, b = 0.7, blunt = 0, notch = 0, curl = 0.12, cup = 0.2 } = {}) {
+    const g = new THREE.PlaneGeometry(1, 1, 6, 12), p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const u = p.getX(i) * 2, v = p.getY(i) + 0.5;
+      const w = Math.pow(Math.max(0, Math.sin(Math.PI * Math.pow(v, a) * (1 - blunt * 0.5))), b) * wid * 0.5;
+      let r = v * len;
+      if (notch) r -= notch * len * (0.5 - 0.5 * Math.cos(u * Math.PI * 3)) * Math.pow(v, 6);
+      p.setXYZ(i, r, curl * v * v * len + cup * u * u * w, u * w);
+    }
+    g.computeVertexNormals();
+    return g;
+  }
+  function ring(P, n, geo, col, { r0 = 0.2, y0 = 0, lift = 0.2, off = 0, jit = 0.07 } = {}) {
+    for (let k = 0; k < n; k++) {
+      const a = ((k + off) / n) * TAU + (rand() - 0.5) * jit;
+      P.push(part(geo, col, mul(RY(a), RZ(lift + (rand() - 0.5) * jit * 2), T(r0, y0, 0), SC(1 + (rand() - 0.5) * 0.14, 1, 1))));
+    }
+  }
+  const dome = (r, sy) => new THREE.SphereGeometry(r, 28, 12, 0, TAU, 0, Math.PI / 2).scale(1, sy, 1);
+  function dots(P, n, r, y, size, col) {
+    const g = new THREE.IcosahedronGeometry(size, 0);
+    for (let k = 0; k < n; k++) { const a = (k / n) * TAU; P.push(part(g, col, T(Math.cos(a) * r, y, Math.sin(a) * r))); }
+  }
+
+  // each returns head geometry in head space (+Y = the face), where the bee lands (landY),
+  // how far below the head centre its tag hangs (below), and whether it stays upright.
+  const SPECIES = {
+    daisy(col) {
+      const P = [part(dome(0.42, 0.55), '#FFB000')];
+      const g = petal(1.6, 0.3, { a: 1.25, b: 0.55, curl: -0.12, cup: 0.12 });
+      ring(P, 18, g, col, { r0: 0.25, lift: 0.14 });
+      ring(P, 18, g, shade(col, 0.9), { r0: 0.22, y0: -0.03, lift: 0.26, off: 0.5 });
+      return { geo: mergeGeometries(P), landY: 0.42, below: 1.75 };
+    },
+    sunflower(col) {
+      const P = [part(dome(0.95, 0.36), '#3A190B')];
+      const seed = new THREE.IcosahedronGeometry(0.062, 0);
+      for (let i = 0; i < 230; i++) {
+        const r = 0.88 * Math.sqrt(i / 230), a = i * 2.39996;
+        const y = 0.36 * Math.sqrt(Math.max(0, 0.9025 - r * r)) + 0.02;
+        P.push(part(seed, i % 3 ? '#2A1007' : '#7A4415', T(Math.cos(a) * r, y, Math.sin(a) * r)));
+      }
+      ring(P, 16, petal(0.8, 0.34, { a: 1.1, b: 1 }), '#4E7A1A', { r0: 0.7, y0: -0.06, lift: -0.18 });
+      const g = petal(1.35, 0.4, { a: 1.12, b: 0.95, curl: 0.08, cup: 0.18 });
+      ring(P, 22, g, col, { r0: 0.78, lift: 0.06 });
+      ring(P, 22, g, shade(col, 0.88), { r0: 0.72, y0: -0.02, lift: 0.18, off: 0.5 });
+      return { geo: mergeGeometries(P), landY: 0.4, below: 2.05 };
+    },
+    cosmos(col) {
+      const P = [];
+      ring(P, 8, petal(1.7, 0.95, { a: 1.6, b: 0.45, blunt: 0.85, notch: 0.06, cup: 0.25, curl: 0.04 }), col, { r0: 0.16, lift: 0.18, jit: 0.12 });
+      P.push(part(dome(0.32, 0.65), '#FFC21A'));
+      dots(P, 26, 0.33, 0.06, 0.05, '#E07A00');
+      return { geo: mergeGeometries(P), landY: 0.32, below: 1.8 };
+    },
+    poppy(col) {
+      const P = [];
+      ring(P, 4, petal(1.45, 1.65, { a: 1.25, b: 0.45, blunt: 0.35, cup: 0.45, curl: 0.22 }), col, { r0: 0.08, lift: 0.7 });
+      ring(P, 4, petal(1.25, 1.45, { a: 1.25, b: 0.45, blunt: 0.35, cup: 0.5, curl: 0.25 }), shade(col, 0.85), { r0: 0.06, lift: 0.98, off: 0.5 });
+      P.push(part(new THREE.SphereGeometry(0.28, 18, 12).scale(1, 0.8, 1), '#7D8C46', T(0, 0.3, 0)));
+      P.push(part(new THREE.CylinderGeometry(0.3, 0.3, 0.05, 8), '#3B2440', T(0, 0.52, 0)));
+      dots(P, 36, 0.42, 0.24, 0.05, '#1E0B1A');
+      return { geo: mergeGeometries(P), landY: 0.74, below: 0.95 };
+    },
+    allium(col) {
+      const P = [part(new THREE.SphereGeometry(0.82, 24, 16), shade(col, 0.45))];
+      const fl = mergeGeometries([new THREE.CylinderGeometry(0.02, 0.02, 0.2, 4).translate(0, 0.1, 0), new THREE.IcosahedronGeometry(0.088, 1).scale(1, 0.6, 1).translate(0, 0.22, 0)].map((g) => (g.index ? g.toNonIndexed() : g)));
+      const q = new THREE.Quaternion(), n = 300;
+      for (let i = 0; i < n; i++) {
+        const y = 1 - ((i + 0.5) / n) * 2, r = Math.sqrt(1 - y * y), a = i * 2.39996;
+        const d = V(Math.cos(a) * r, y, Math.sin(a) * r);
+        q.setFromUnitVectors(UP, d);
+        P.push(part(fl, rand() > 0.22 ? col : mix(col, '#FFFFFF', 0.3), M4().compose(d.multiplyScalar(0.74), q, V(1, 1, 1))));
+      }
+      return { geo: mergeGeometries(P), landY: 1.02, below: 1.2, upright: true };
+    },
+    bud(col) {
+      const tear = new THREE.SphereGeometry(0.36, 20, 14), tp = tear.attributes.position;
+      for (let i = 0; i < tp.count; i++) {
+        const y = tp.getY(i) / 0.36, k = 1 - Math.pow(Math.max(0, y), 1.6) * 0.8;
+        tp.setXYZ(i, tp.getX(i) * k, tp.getY(i) * 2.1, tp.getZ(i) * k);
+      }
+      tear.computeVertexNormals();
+      const P = [part(tear, col, T(0, 0.82, 0))];
+      ring(P, 5, petal(1.3, 0.62, { a: 1.15, b: 0.9, cup: 0.4, curl: -0.08 }), '#5B8A1E', { r0: 0.03, lift: 1.28, jit: 0.12 });
+      P.push(part(new THREE.SphereGeometry(0.24, 14, 10), '#4E7A1A'));
+      return { geo: mergeGeometries(P).scale(0.8, 0.8, 0.8), landY: 1.3, below: 0.35, upright: true };
+    },
+  };
+  const leafGeo = petal(2.3, 0.82, { a: 1.2, b: 0.85, cup: 0.3, curl: -0.25 });
+  const flowerMat = new THREE.MeshStandardMaterial({
+    vertexColors: true, side: THREE.DoubleSide, roughness: 0.6, emissive: '#FFFFFF', emissiveIntensity: 0.22,
+  });
+  // backlit petals glow in their own colour
+  flowerMat.onBeforeCompile = (sh) => {
+    sh.fragmentShader = sh.fragmentShader.replace('vec3 totalEmissiveRadiance = emissive;', 'vec3 totalEmissiveRadiance = emissive * vColor.rgb;');
+  };
+
+  function stemGeo(h, r, wob) {
+    const curve = new THREE.CatmullRomCurve3([
+      V(), V(wob[0], h.y * 0.33, wob[1]).addScaledVector(h, 0.3).setY(h.y * 0.33),
+      V(-wob[0] * 0.6, 0, -wob[1] * 0.6).addScaledVector(h, 0.68).setY(h.y * 0.68), h.clone(),
+    ]);
+    const P = [part(new THREE.TubeGeometry(curve, 36, r, 6), '#5A8A1E')];
+    if (h.y > 2.2) for (const [t, k] of [[0.2, 0], [0.42, 1]]) {
+      const p = curve.getPoint(t);
+      P.push(part(leafGeo, k ? '#4A7518' : '#5B8A1E', mul(T(p), RY(wob[2 + k] * TAU), RZ(0.5), SC(0.7 + 0.35 * (h.y / 10)))));
+    }
+    return mergeGeometries(P);
+  }
+
+  /* --- the interactive flowers --- */
+  const F = items.slice(0, NF).map((it, i) => {
+    const sp = SPECIES[it.kind] ? SPECIES[it.kind](it.color) : SPECIES.daisy(it.color);
+    const head = new THREE.Mesh(sp.geo, flowerMat);
+    if (!sp.upright) head.rotation.x = Math.PI / 2;
+    const face = new THREE.Group(); face.add(head);
+    const stem = new THREE.Mesh(new THREE.BufferGeometry(), flowerMat);
+    const group = new THREE.Group(); group.add(face, stem);
+    scene.add(group);
+    head.userData.i = stem.userData.i = i;
+    return { i, sp, head, face, stem, group, rnd: [rand(), rand(), rand(), rand(), rand(), rand()], hover: 0, sway: rand() * TAU };
+  });
+
+  /* --- the hive (a straw skep on a stump) --- */
+  const hive = (() => {
+    const P = [
+      part(new THREE.CylinderGeometry(2.1, 2.5, 2.2, 28), '#6E4020', T(0, 1.1, 0)),
+      part(new THREE.CylinderGeometry(2.1, 2.1, 0.06, 28), '#B07A45', T(0, 2.22, 0)),
+    ];
+    for (let k = 0; k < 9; k++) {
+      const R = 1.75 * Math.pow(Math.cos((k / 9.3) * Math.PI / 2), 0.55);
+      P.push(part(new THREE.TorusGeometry(R, 0.22, 8, 40), k % 2 ? '#C98A2C' : '#E7AE45', mul(T(0, 2.45 + k * 0.32, 0), RX(Math.PI / 2))));
+    }
+    P.push(part(new THREE.SphereGeometry(0.42, 16, 10), '#E7AE45', T(0, 5.38, 0)));
+    P.push(part(new THREE.CircleGeometry(0.46, 20, 0, Math.PI), '#2A0E33', T(0, 2.3, 1.97)));
+    const m = new THREE.Mesh(mergeGeometries(P), flowerMat);
+    m.userData.i = HIVE;
+    scene.add(m);
+    return m;
+  })();
+  const pickables = [...F.flatMap((f) => [f.head, f.stem]), hive];
+
+  /* --- far-off flowers, just for depth --- */
+  {
+    const kinds = ['daisy', 'sunflower', 'cosmos', 'poppy', 'allium'];
+    const cols = ['#FFFFFF', '#FFC21A', '#FF6FA8', '#FF4B2B', '#9152F2', '#FF8A1F', '#FFB3D1'];
+    for (let k = 0; k < 22; k++) {
+      const kind = kinds[k % kinds.length], sp = SPECIES[kind](cols[Math.floor(rand() * cols.length)]);
+      const B = V((rand() - 0.5) * 90, 0, -26 - rand() * 34), h = V((rand() - 0.5) * 2, 7 + rand() * 10, 0);
+      const g = new THREE.Group(); g.position.copy(B);
+      g.add(new THREE.Mesh(stemGeo(h, 0.16, [rand() - 0.5, rand() - 0.5, rand(), rand()]), flowerMat));
+      const head = new THREE.Mesh(sp.geo, flowerMat); head.position.copy(h); head.scale.setScalar(1.3);
+      if (!sp.upright) { head.rotation.x = Math.PI / 2 - 0.35; head.rotation.y = (rand() - 0.5) * 0.8; }
+      g.add(head); scene.add(g);
+    }
+  }
+
+  /* ================= the bee ================= */
+  const bee = (() => {
+    const root = new THREE.Group();
+    const P = [];
+    const ab = part(new THREE.SphereGeometry(1, 32, 20).rotateX(Math.PI / 2), '#FFC21A', mul(T(0, -0.02, -0.8), SC(0.5, 0.47, 0.74)));
+    {
+      const p = ab.attributes.position, c = ab.attributes.color, Y = new THREE.Color('#FFC21A'), K = new THREE.Color('#2A0E33');
+      for (let i = 0; i < p.count; i++) {
+        const t = (-0.06 - p.getZ(i)) / 1.48, band = Math.floor(t * 5);
+        const col = t > 0.9 || band % 2 === 1 ? K : Y;
+        c.setXYZ(i, col.r, col.g, col.b);
+      }
+    }
+    P.push(ab);
+    P.push(part(new THREE.SphereGeometry(0.42, 24, 16), '#F2A516', T(0, 0.05, 0)));
+    P.push(part(new THREE.SphereGeometry(0.31, 24, 16), '#2A0E33', mul(T(0, 0.02, 0.5), SC(1, 0.95, 0.9))));
+    P.push(part(new THREE.ConeGeometry(0.07, 0.24, 8).rotateX(-Math.PI / 2), '#2A0E33', T(0, -0.02, -1.6)));
+    for (const sx of [-1, 1]) {
+      const ant = new THREE.CatmullRomCurve3([V(0.08 * sx, 0.22, 0.62), V(0.2 * sx, 0.48, 0.82), V(0.34 * sx, 0.58, 1.0)]);
+      P.push(part(new THREE.TubeGeometry(ant, 10, 0.025, 5), '#2A0E33'));
+      P.push(part(new THREE.SphereGeometry(0.06, 10, 8), '#2A0E33', T(0.34 * sx, 0.58, 1.0)));
+      for (const lz of [0.18, 0, -0.18]) {
+        P.push(part(new THREE.CylinderGeometry(0.028, 0.02, 0.55, 5), '#2A0E33', mul(T(0.2 * sx, -0.42, lz), RZ(0.45 * sx), RX(-0.3))));
+      }
+    }
+    const body = new THREE.Mesh(mergeGeometries(P), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55 }));
+    root.add(body);
+    const eyeMat = new THREE.MeshStandardMaterial({ color: '#160818', roughness: 0.12, metalness: 0.2 });
+    const shine = new THREE.MeshBasicMaterial({ color: '#FFFFFF' });
+    for (const sx of [-1, 1]) {
+      const e = new THREE.Mesh(new THREE.SphereGeometry(0.15, 18, 12), eyeMat); e.position.set(0.19 * sx, 0.07, 0.66); root.add(e);
+      const h = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 6), shine); h.position.set(0.16 * sx, 0.15, 0.79); root.add(h);
+    }
+    // wings: a fore and hind pair per side
+    const wing = (() => {
+      const w1 = new THREE.CircleGeometry(1, 24).scale(0.66, 0.25, 1).translate(0.64, 0, 0).rotateX(-Math.PI / 2).rotateY(0.45);
+      const w2 = new THREE.CircleGeometry(1, 20).scale(0.42, 0.17, 1).translate(0.42, 0, 0).rotateX(-Math.PI / 2).rotateY(0.95);
+      return mergeGeometries([w1, w2]);
+    })();
+    const wingMat = new THREE.MeshBasicMaterial({ color: '#FFF8E8', transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
+    const wings = [-1, 1].map((sx) => {
+      const pv = new THREE.Group(); pv.position.set(0.14 * sx, 0.38, 0.02);
+      const m = new THREE.Mesh(wing, wingMat); m.scale.x = sx; pv.add(m); root.add(pv);
+      return pv;
+    });
+    const pollenMat = new THREE.MeshStandardMaterial({ color: '#FFB300', roughness: 0.8, emissive: '#FF8A00', emissiveIntensity: 0.25 });
+    const pollen = [-1, 1].map((sx) => {
+      const m = new THREE.Mesh(new THREE.SphereGeometry(0.17, 14, 10), pollenMat); m.position.set(0.3 * sx, -0.55, -0.2); m.scale.setScalar(0.001); root.add(m);
+      return m;
+    });
+    root.scale.setScalar(0.55);
+    scene.add(root);
+    return { root, wings, pollen, pos: V(-14, 3.5, 2), vel: V(), mode: 'free', t: 0, dur: 1, p0: V(), p1: V(), p2: V(), target: -1, pollenAmt: 0 };
+  })();
+
+  /* --- the dotted flight path a cartoon bee leaves behind --- */
+  const trail = (() => {
+    const n = 90, pos = new Float32Array(n * 3), age = new Float32Array(n).fill(99);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('age', new THREE.BufferAttribute(age, 1));
+    const pts = new THREE.Points(g, new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false,
+      uniforms: { uPR: { value: renderer.getPixelRatio() } },
+      vertexShader: `attribute float age; uniform float uPR; varying float vA;
+        void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          vA = clamp(1.0 - age / 2.8, 0.0, 1.0);
+          gl_PointSize = 7.0 * uPR * (9.0 / -mv.z) * (0.45 + 0.55 * vA);
+          gl_Position = projectionMatrix * mv; }`,
+      fragmentShader: `varying float vA; void main(){ float d = length(gl_PointCoord - 0.5);
+        gl_FragColor = vec4(0.165, 0.055, 0.2, smoothstep(0.5, 0.38, d) * vA * 0.85); }`,
+    }));
+    pts.frustumCulled = false;
+    scene.add(pts);
+    let head = 0;
+    const lastDot = V(1e9, 0, 0);
+    return {
+      update(dt, p, on) {
+        for (let i = 0; i < n; i++) age[i] += dt;
+        if (on && p.distanceTo(lastDot) > 0.17) {
+          pos[head * 3] = p.x; pos[head * 3 + 1] = p.y; pos[head * 3 + 2] = p.z; age[head] = 0;
+          head = (head + 1) % n; lastDot.copy(p);
+          g.attributes.position.needsUpdate = true;
+        }
+        g.attributes.age.needsUpdate = true;
+      },
+    };
+  })();
+
+  /* ================= layout: place flowers by where they should land on screen ================= */
+  // [u, v, depth]: u,v in screen space (-1..1), depth = distance from the camera.
+  const LAYOUT = {
+    wide: [[-0.26, 0.2, 12], [0.12, 0.55, 17], [0.5, 0.14, 13], [0.8, 0.56, 19], [-0.6, -0.2, 12.5], [-0.1, -0.36, 9.5], [0.3, -0.3, 10], [0.62, -0.36, 10.5], [-0.38, -0.55, 8.5]],
+    wideHive: [0.78, -0.62],
+    tall: [[-0.45, 0.16, 15], [0.35, 0.26, 19], [0.5, -0.08, 13], [-0.08, -0.02, 21], [-0.52, -0.3, 12], [0.12, -0.44, 10], [0.3, -0.64, 9.5], [-0.62, -0.62, 9], [-0.02, -0.82, 6.2]],
+    tallHive: [0.8, -0.96],
+  };
+  const camBase = V(), lookBase = V();
+  let S = 1, tall = false;
+  const lc = new THREE.PerspectiveCamera();
+  function layout() {
+    const w = innerWidth, h = innerHeight, asp = w / h;
+    tall = asp < 0.85;
+    renderer.setSize(w, h, false);
+    camera.aspect = asp; camera.fov = tall ? 62 : 50; camera.updateProjectionMatrix();
+    S = tall ? 0.62 : 1;
+    bee.root.scale.setScalar(tall ? 0.42 : 0.55);
+    camBase.set(0, tall ? 2.3 : 2.2, tall ? 12 : 10);
+    lookBase.set(0, tall ? 5.4 : 4.8, -4);
+    lc.copy(camera); lc.position.copy(camBase); lc.lookAt(lookBase); lc.updateMatrixWorld();
+    const L = tall ? LAYOUT.tall : LAYOUT.wide;
+    for (const f of F) {
+      const [u, v, d] = L[f.i] || [((f.i * 0.618) % 1) * 1.6 - 0.8, -0.5 + ((f.i * 0.382) % 1) * 0.6, 12];
+      const dir = V(u, v, 0.5).unproject(lc).sub(lc.position).normalize();
+      const H = lc.position.clone().addScaledVector(dir, d);
+      H.y = Math.max(H.y, 1.3);
+      const lean = Math.min(1, H.y / 8);
+      const B = V(H.x + (f.rnd[0] - 0.5) * 1.4 * S * lean, 0, H.z + (f.rnd[1] - 0.5) * lean);
+      f.group.position.copy(B); f.group.rotation.set(0, 0, 0);
+      const hl = H.clone().sub(B);
+      f.face.position.copy(hl); f.face.scale.setScalar(S);
+      f.stem.geometry.dispose();
+      f.stem.geometry = stemGeo(hl, 0.06 + 0.06 * S, [(f.rnd[2] - 0.5) * lean, (f.rnd[3] - 0.5) * 0.6 * lean, f.rnd[4], f.rnd[5]]);
+      f.group.updateMatrixWorld(true);
+      if (f.sp.upright) f.face.rotation.set((f.rnd[2] - 0.5) * 0.3, 0, (f.rnd[3] - 0.5) * 0.3);
+      else f.face.lookAt(V((f.rnd[2] - 0.5) * 6, 2 + f.rnd[3] * 5, 0).add(lc.position));
+    }
+    const [hu, hv] = tall ? LAYOUT.tallHive : LAYOUT.wideHive;
+    const hd = V(hu, hv, 0.5).unproject(lc).sub(lc.position).normalize();
+    const t = hd.y < -0.02 ? -lc.position.y / hd.y : 9;
+    hive.position.copy(lc.position).addScaledVector(hd, Math.min(t, 14)).setY(0);
+    hive.scale.setScalar(S * 0.55);
+    hive.rotation.y = Math.atan2(lc.position.x - hive.position.x, lc.position.z - hive.position.z);
+    if (!started) { camera.position.copy(camBase).add(V(0, -1.2, 5)); look.copy(lookBase).add(V(0, -2, 0)); started = true; }
+  }
+  let started = false;
+  const look = V();
+  const you = $('#you');
+  let rT = 0;
+  // where on screen (x, -1..1) a landed flower should sit: centred in the space the note and packet leave free
+  let focusNdc = -0.1;
+  const tucked = matchMedia('(max-width: 900px), (max-height: 520px)');
+  const sheet = matchMedia('(max-width: 900px) and (min-height: 521px)');
+  const measureFocus = () => {
+    if (note.hidden) return;
+    const l = tucked.matches ? 0 : document.querySelector('.packet').getBoundingClientRect().right;
+    focusNdc = ((l + note.getBoundingClientRect().left) / 2 / innerWidth) * 2 - 1;
+  };
+  let tagW = [], youW = 0;
+  const measure = () => { tagW = tags.map((t) => t.offsetWidth); youW = you.offsetWidth; };
+  document.fonts.ready.then(measure);
+  addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() => { layout(); measure(); measureFocus(); }, 120); });
+  layout();
+  if (RM) { camera.position.copy(camBase); look.copy(lookBase); }
+
+  const landPoint = (i, out = V()) => i === HIVE
+    ? hive.localToWorld(out.set(0, 2.6, 2.35))
+    : F[i].head.localToWorld(out.set(0, F[i].sp.landY + 0.12, 0));
+  const tagPoint = (i, out = V()) => {
+    if (i === HIVE) return hive.localToWorld(out.set(0, 6.1, 0));
+    F[i].face.getWorldPosition(out);
+    return out.addScaledVector(UP, -(F[i].sp.below * S + 0.15));
+  };
+
+  /* ================= input ================= */
+  const ray = new THREE.Raycaster();
+  const ndc = new THREE.Vector2(), pointerTarget = V();
+  let pointerActive = false, hovered = -1, needPick = false;
+  canvas.addEventListener('pointermove', (e) => {
+    ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+    if (e.pointerType === 'mouse') pointerActive = true;
+    needPick = true;
+  });
+  canvas.addEventListener('pointerleave', () => { pointerActive = false; setHover(-1); });
+  canvas.addEventListener('click', (e) => {
+    ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+    const i = pick();
+    if (i >= 0) land(i); else if (current >= 0) takeOff();
+  });
+  tags.forEach((b, i) => {
+    b.addEventListener('pointerenter', () => setHover(i));
+    b.addEventListener('pointerleave', () => setHover(-1));
+    b.addEventListener('focus', () => setHover(i));
+    b.addEventListener('blur', () => setHover(-1));
+  });
+  function pick() {
+    ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObjects(pickables, false)[0];
+    return hit ? hit.object.userData.i : -1;
+  }
+  function setHover(i) {
+    if (hovered === i) return;
+    if (hovered >= 0) tags[hovered].classList.remove('hot');
+    hovered = i;
+    if (i >= 0) tags[i].classList.add('hot');
+    canvas.classList.toggle('point', i >= 0);
+  }
+
+  /* ================= loop ================= */
+  const tmp = V(), tmp2 = V(), acc = V(), dummy = new THREE.Object3D(), plane = new THREE.Plane();
+  const fwd = V(), right = V(), camUp = V(), desPos = V(), desLook = V();
+  const easeIO = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+  const easeBack = (x) => 1 + 2.2 * Math.pow(x - 1, 3) + 1.2 * Math.pow(x - 1, 2);
+  let time = 0, last = performance.now();
+
+  function project(p, el, w) {
+    tmp2.copy(p).project(camera);
+    if (tmp2.z > 1) { el.style.visibility = 'hidden'; return; }
+    el.style.visibility = '';
+    const half = (w || 0) / 2 + 8;
+    const x = THREE.MathUtils.clamp((tmp2.x * 0.5 + 0.5) * innerWidth, half, innerWidth - half);
+    return [x, (-tmp2.y * 0.5 + 0.5) * innerHeight];
+  }
+
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 0.05); last = now; time += dt;
+    uTime.value = RM ? 0 : time;
+    const follow = (rate) => (RM ? 1 : 1 - Math.exp(-dt * rate));
+
+    camera.getWorldDirection(fwd);
+    right.crossVectors(fwd, UP).normalize();
+    camUp.crossVectors(right, fwd).normalize();
+
+    if (needPick && pointerActive) { needPick = false; setHover(pick()); }
+
+    // flowers: bloom in, sway, nod when hovered
+    F.forEach((f) => {
+      const b = RM ? 1 : Math.min(1, Math.max(0, (time - 0.5 - f.i * 0.11) / 1.1));
+      f.hover += ((hovered === f.i || current === f.i ? 1 : 0) - f.hover) * follow(8);
+      f.head.scale.setScalar(Math.max(0.001, easeBack(b)) * (1 + f.hover * 0.08));
+      if (!RM) {
+        f.group.rotation.z = Math.sin(time * 0.6 + f.sway) * 0.018;
+        f.group.rotation.x = Math.cos(time * 0.45 + f.sway) * 0.012;
+      }
+      tags[f.i].style.opacity = b;
+    });
+    {
+      const hv = hovered === HIVE || current === HIVE ? 1.06 : 1;
+      hive.scale.lerp(tmp.setScalar(S * 0.55 * hv), follow(8));
+    }
+
+    // bee
+    if (bee.mode === 'free') {
+      if (pointerActive) {
+        ray.setFromCamera(ndc, camera);
+        plane.setFromNormalAndCoplanarPoint(fwd, tmp.copy(camera.position).addScaledVector(fwd, 7));
+        if (ray.ray.intersectPlane(plane, pointerTarget)) pointerTarget.y = Math.max(pointerTarget.y, 1.2);
+      } else {
+        ray.setFromCamera(tmp.set(Math.sin(time * 0.35) * 0.45, (tall ? -0.12 : 0.05) + Math.sin(time * 0.6) * 0.18, 0), camera);
+        pointerTarget.copy(ray.ray.origin).addScaledVector(ray.ray.direction, 7.5);
+      }
+      if (RM) { bee.pos.copy(pointerTarget); bee.vel.set(0, 0, 0); }
+      else {
+        acc.copy(pointerTarget).sub(bee.pos).multiplyScalar(7).addScaledVector(bee.vel, -4.2);
+        bee.vel.addScaledVector(acc, dt).clampLength(0, 16);
+        bee.pos.addScaledVector(bee.vel, dt);
+      }
+    } else if (bee.mode === 'fly') {
+      landPoint(bee.target, bee.p2);
+      bee.t = Math.min(1, bee.t + dt / bee.dur);
+      const e = easeIO(bee.t), k = 1 - e;
+      tmp.copy(bee.pos);
+      bee.pos.set(0, 0, 0).addScaledVector(bee.p0, k * k).addScaledVector(bee.p1, 2 * k * e).addScaledVector(bee.p2, e * e);
+      bee.vel.copy(bee.pos).sub(tmp).divideScalar(Math.max(dt, 1e-3));
+      if (bee.t >= 1) { bee.mode = 'landed'; markVisited(bee.target); }
+    } else {
+      landPoint(bee.target, bee.pos); bee.vel.set(0, 0, 0);
+    }
+    const flying = bee.mode !== 'landed';
+    bee.root.position.copy(bee.pos);
+    if (!RM && flying) bee.root.position.y += Math.sin(time * 4.2) * 0.07;
+    const speed = bee.vel.length();
+    tmp.copy(bee.pos);
+    if (flying && speed > 1.2) tmp.addScaledVector(bee.vel, 1 / speed);
+    else tmp.add(tmp2.copy(camera.position).sub(bee.pos).setY(0).normalize());
+    dummy.position.copy(bee.pos); dummy.lookAt(tmp);
+    if (flying) dummy.rotateZ(THREE.MathUtils.clamp(bee.vel.dot(right) * -0.05, -0.5, 0.5));
+    bee.root.quaternion.slerp(dummy.quaternion, follow(7));
+    if (!RM) trail.update(dt, bee.root.position, flying && speed > 0.5);
+    const flap = flying ? 0.35 + 0.6 * Math.sin(time * (RM ? 8 : 58)) : (Math.sin(time * 1.3) > 0.93 ? 0.4 + 0.5 * Math.sin(time * 50) : 0.12);
+    bee.wings[0].rotation.z = -flap; bee.wings[1].rotation.z = flap;
+    for (const p of bee.pollen) p.scale.setScalar(Math.max(0.001, p.scale.x + (bee.pollenAmt - p.scale.x) * follow(4)));
+
+    // camera
+    if (current >= 0) {
+      landPoint(current, desLook);
+      const dist = (current === HIVE ? 9 : current < NF && F[current].sp.upright ? 7 : 8.5) * S + 1.5;
+      desPos.copy(camBase).sub(lookBase).normalize().multiplyScalar(dist).add(desLook);
+      desPos.y = Math.max(desPos.y, desLook.y + 0.9, 2.2);
+      if (sheet.matches) desLook.addScaledVector(UP, -dist * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 0.5);
+      else {
+        const shift = -focusNdc * dist * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
+        desPos.addScaledVector(right, shift); desLook.addScaledVector(right, shift);
+      }
+    } else {
+      desPos.copy(camBase); desLook.copy(lookBase);
+      if (pointerActive && !RM) desPos.addScaledVector(right, ndc.x * 0.6).addScaledVector(UP, ndc.y * 0.3);
+    }
+    camera.position.lerp(desPos, follow(current >= 0 ? 2.2 : 1.6));
+    look.lerp(desLook, follow(current >= 0 ? 2.6 : 1.6));
+    camera.lookAt(look);
+    sky.position.copy(camera.position);
+
+    // tags + the bee's label follow the world
+    camera.updateMatrixWorld();
+    if (current < 0) items.forEach((_, i) => {
+      const xy = project(tagPoint(i, tmp), tags[i], tagW[i]);
+      if (!xy) return;
+      tags[i].style.transform = `translate(${xy[0].toFixed(1)}px, ${xy[1].toFixed(1)}px) translate(-50%, ${i === HIVE ? '-100%' : '0'})`;
+    });
+    if (!you.classList.contains('gone')) {
+      const xy = project(tmp.copy(bee.root.position).addScaledVector(UP, 0.75), you, youW);
+      if (xy) you.style.transform = `translate(${xy[0].toFixed(1)}px, ${(xy[1] - 10).toFixed(1)}px) translate(-50%, -100%)`;
+      you.style.opacity = time > 1.2 ? 1 : 0;
+    }
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  return {
+    land(i) {
+      measureFocus();
+      bee.target = i;
+      bee.p0.copy(bee.pos);
+      landPoint(i, bee.p2);
+      const d = bee.p0.distanceTo(bee.p2);
+      bee.p1.copy(bee.p0).lerp(bee.p2, 0.5).addScaledVector(UP, 1.5 + d * 0.18);
+      bee.t = 0; bee.dur = RM ? 0.001 : THREE.MathUtils.clamp(d / 9, 0.7, 1.6);
+      bee.mode = 'fly';
+    },
+    takeOff() {
+      bee.mode = 'free';
+      bee.vel.set(0, 3, 0);
+    },
+    setPollen(k) { bee.pollenAmt = 0.35 + 0.65 * k; },
+  };
+}
+</script>
+</body>
+</html>

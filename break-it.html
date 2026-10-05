@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daksh Jain</title>
+<meta name="description" content="Daksh Jain, backend engineer in Bangalore. Click anything to break this site and watch it recover.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,400..900&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one fixed WebGL field of packets behind full-height sections; the packets re-form into each section's key figure. */
+:root {
+  --blue: #1a3cff;      /* the whole world */
+  --ink: #ffffff;       /* type + healthy packets */
+  --ink-soft: rgba(255, 255, 255, .74);
+  --fault: #ff6b1a;     /* dropped packet */
+  --retry: #ffd23f;     /* failed retry */
+  --deep: #0a1a8c;      /* shadows, panels */
+  --display: "Anybody", "Arial Black", sans-serif;
+  --body: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--blue); color: var(--ink); font: 400 1.125rem/1.6 var(--body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+a { color: inherit; text-decoration-thickness: 2px; text-underline-offset: .2em; }
+a:hover { color: var(--retry); }
+:focus-visible { outline: 3px solid var(--retry); outline-offset: 3px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 3; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: calc(env(safe-area-inset-top, 0px) + 1.1rem) clamp(1rem, 4vw, 3rem) 1rem; pointer-events: none; }
+nav > * { pointer-events: auto; }
+.brand { font: 800 1rem/1 var(--display); font-stretch: 125%; letter-spacing: .01em; text-decoration: none; }
+nav ul { display: flex; gap: clamp(.9rem, 2.5vw, 2rem); margin: 0; padding: 0; list-style: none; font-weight: 600; font-size: .95rem; }
+nav ul a { text-decoration: none; }
+
+main { position: relative; z-index: 2; pointer-events: none; }
+main a, main button { pointer-events: auto; }
+section { min-height: 100svh; display: grid; align-content: end; padding: 7rem clamp(1rem, 4vw, 3rem) clamp(2.5rem, 7vh, 5rem); }
+.copy { max-width: 31rem; display: grid; gap: 1.1rem; pointer-events: auto; }
+h2 { margin: 0; font: 800 clamp(2.3rem, 5.4vw, 4.8rem)/.92 var(--display); font-stretch: 72%; letter-spacing: -.01em; text-wrap: balance; }
+p { margin: 0; color: var(--ink-soft); text-wrap: pretty; }
+p strong { color: var(--ink); font-weight: 600; }
+.meta { font: 400 .82rem/1.5 var(--mono); color: var(--ink-soft); }
+.meta a { color: var(--ink); }
+
+#top { align-content: start; padding-top: 6.5rem; }
+#top .copy { max-width: 34rem; }
+.lede { font-size: clamp(1.2rem, 2vw, 1.5rem); line-height: 1.4; color: var(--ink); }
+.hint { font-size: 1rem; }
+.btn { justify-self: start; display: inline-flex; align-items: center; gap: .6rem; font: 600 1rem/1 var(--body); color: var(--blue); background: var(--ink); border: 0; border-radius: 999px; padding: .85rem 1.25rem; cursor: pointer; transition: transform .15s; }
+.btn:hover { transform: translateY(-2px); }
+.btn .dot { width: .6rem; height: .6rem; border-radius: 50%; background: var(--fault); }
+.btn[aria-pressed="true"] { background: var(--fault); color: var(--ink); }
+.btn[aria-pressed="true"] .dot { background: var(--ink); animation: blink .5s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.email { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.email code { font: 600 clamp(1rem, 2.6vw, 1.35rem)/1.3 var(--mono); color: var(--ink); overflow-wrap: anywhere; }
+.copy-btn { font: 600 .85rem/1 var(--body); color: var(--ink); background: transparent; border: 2px solid var(--ink); border-radius: 999px; padding: .5rem .9rem; cursor: pointer; }
+.links { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; font-weight: 600; }
+
+#hud { position: fixed; z-index: 3; right: clamp(1rem, 4vw, 3rem); top: calc(env(safe-area-inset-top, 0px) + 4rem); display: grid; grid-template-columns: auto auto; gap: .1rem 1rem; font: 400 .75rem/1.5 var(--mono); color: var(--ink-soft); font-variant-numeric: tabular-nums; pointer-events: none; text-align: right; }
+#hud b { color: var(--ink); font-weight: 600; }
+#hud .f { color: var(--fault); }
+
+.no-gl #gl, .no-gl #hud { display: none; }
+.no-gl #top .sr { position: static; width: auto; height: auto; clip-path: none; white-space: normal; font: 900 clamp(4rem, 16vw, 12rem)/.85 var(--display); }
+
+@media (max-width: 760px) {
+  nav ul { display: none; }
+  section { align-content: end; padding-top: 52svh; }
+  #top { padding-top: 4.5rem; }
+  #top .copy { background: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .copy { background: color-mix(in srgb, var(--blue) 82%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 1rem; margin-inline: -1rem; border-radius: 1rem; }
+  #hud { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
+</style>
+</head>
+<body>
+<canvas id="gl" aria-hidden="true"></canvas>
+
+<nav aria-label="Primary">
+  <a class="brand" href="#top">Daksh Jain</a>
+  <ul>
+    <li><a href="#work">Work</a></li>
+    <li><a href="#mux">Projects</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<div id="hud" aria-hidden="true">
+  <span>packets</span><b id="h-total">0</b>
+  <span>dropped</span><b id="h-drop" class="f">0</b>
+  <span>retrying</span><b id="h-retry">0</b>
+  <span>recovered</span><b id="h-ok">0</b>
+</div>
+
+<main>
+  <section id="top" data-shape="DAKSH|JAIN">
+    <div class="copy">
+      <h1 class="sr">Daksh Jain</h1>
+      <p class="lede">Backend engineer in Bangalore. I build systems that keep working while parts of them fail.</p>
+      <p class="hint">This page is one of them. Click or tap anywhere to knock packets out and watch them retry their way home.</p>
+      <button class="btn" id="chaos" type="button" aria-pressed="false"><span class="dot"></span><span>Inject 36% failure</span></button>
+    </div>
+  </section>
+
+  <section id="work" data-shape="58%">
+    <div class="copy">
+      <h2>Emergent</h2>
+      <p class="meta">Backend developer, Apr to Aug 2025</p>
+      <p>I built the backend that lets autonomous agents run multi-step jobs against outside APIs, plus an image agent wired into Unsplash and Pexels. When those APIs failed, retries, circuit breakers and recovery workflows kept the agents running.</p>
+      <p>I reworked the rollback pipelines for agent services on Kubernetes and <strong>cut pod memory by 58%</strong>. I also set up Slack alerting for production failures and reviewed more than 40 PRs.</p>
+      <p class="meta">FastAPI, Python, PostgreSQL, LangChain, GCP</p>
+    </div>
+  </section>
+
+  <section id="mux" data-shape="36%">
+    <div class="copy">
+      <h2>mux</h2>
+      <p>A WebSocket multiplexer in Rust and Tokio that routes live audio between phones and GPU text-to-speech workers. It <strong>keeps throughput up while 36% of the backends are failing</strong>.</p>
+      <p>Each connection is an actor with one owner, linked by bounded channels. Every stream gets its own backpressure, and circuit breakers pull dead workers out and bring them back when they recover.</p>
+      <p class="meta">Rust, Tokio, WebSockets, Prometheus. <a href="https://github.com/wannabeepolymath/mux">Source</a></p>
+    </div>
+  </section>
+
+  <section id="redis" data-shape="20K">
+    <div class="copy">
+      <h2>Redis, from scratch</h2>
+      <p>A Redis-compatible database in Go. It speaks the RESP wire protocol, so existing Redis clients connect without changes. A single-threaded epoll loop <strong>holds 20,000 connections</strong>.</p>
+      <p>It supports pipelining, MULTI/EXEC, key expiry, append-only persistence with background rewrite, and approximated LRU eviction.</p>
+      <p class="meta">Go, TCP, epoll, RESP. <a href="https://github.com/wannabeepolymath/redis">Source</a></p>
+    </div>
+  </section>
+
+  <section id="parla" data-shape="<2s">
+    <div class="copy">
+      <h2>Parla</h2>
+      <p>Voice dictation for macOS that runs on your machine. Whisper.cpp on Metal turns speech into text, an LLM fixes punctuation and removes filler words, and the result is typed into whatever app you're using, <strong>in under two seconds</strong>.</p>
+      <p class="meta">Swift, SwiftUI, Whisper.cpp, Metal, Accessibility API. <a href="https://github.com/wannabeepolymath/parla">Source</a></p>
+    </div>
+  </section>
+
+  <section id="sol" data-shape="SOL">
+    <div class="copy">
+      <h2>Survival pot</h2>
+      <p>A Telegram bot that creates Solana wallets, sends SOL and runs an on-chain survival betting game. Prize pools are paid out automatically by scheduled transactions.</p>
+      <p class="meta">TypeScript, Bun, Solana Web3.js, Telegraf. <a href="https://github.com/wannabeepolymath/Sol-survival-jackpot">Source</a></p>
+    </div>
+  </section>
+
+  <section id="contact" data-shape="HI">
+    <div class="copy">
+      <h2>Say hi</h2>
+      <p>I'm studying computer science (bachelor's and master's) at BITS Pilani, graduating 2027. Write to me about backends, distributed systems or anything that has to keep running.</p>
+      <div class="email"><code id="mail">dakshjainn2004@gmail.com</code><button class="copy-btn" id="copy" type="button">Copy email</button></div>
+      <div class="links"><a href="https://github.com/wannabeepolymath">GitHub</a><a href="https://x.com/dakshhjainn">X</a></div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+
+  // Copy email works without WebGL too.
+  $('#copy').addEventListener('click', async () => {
+    const b = $('#copy');
+    try { await navigator.clipboard.writeText($('#mail').textContent); b.textContent = 'Copied'; }
+    catch { getSelection().selectAllChildren($('#mail')); b.textContent = 'Press Cmd+C'; }
+    setTimeout(() => (b.textContent = 'Copy email'), 1800);
+  });
+
+  const canvas = $('#gl');
+  let renderer;
+  try { if (!window.THREE) throw 0; renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); }
+  catch { document.documentElement.classList.add('no-gl'); return; }
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const css = getComputedStyle(document.documentElement);
+  const col = (v) => new THREE.Color(css.getPropertyValue(v).trim());
+  const BLUE = col('--blue'), WHITE = col('--ink'), FAULT = col('--fault'), RETRY = col('--retry');
+
+  const N = innerWidth < 760 ? 4500 : 7000;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setClearColor(BLUE);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(BLUE, 16, 34);
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+  camera.position.z = 18;
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x0a1a8c, 0.85));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+  sun.position.set(3, 5, 16);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 12, bottom: -12, near: 1, far: 40 });
+  scene.add(sun);
+
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(120, 80), new THREE.ShadowMaterial({ color: 0x050f60, opacity: 0.18 }));
+  wall.position.z = -1.2;
+  wall.receiveShadow = true;
+  scene.add(wall);
+
+  const group = new THREE.Group();
+  scene.add(group);
+  const mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.05 }), N);
+  mesh.castShadow = true;
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  group.add(mesh);
+
+  // Per-packet state. state: 0 = delivered (springs home), 1 = dropped (waiting on backoff).
+  const pos = new Float32Array(N * 3), vel = new Float32Array(N * 3), tgt = new Float32Array(N * 3);
+  const rot = new Float32Array(N * 2), spin = new Float32Array(N * 2);
+  const state = new Uint8Array(N), tries = new Uint8Array(N), timer = new Float32Array(N), flash = new Float32Array(N);
+  const stats = { drop: 0, ok: 0 };
+  for (let i = 0; i < N * 3; i++) pos[i] = (Math.random() - 0.5) * (i % 3 === 2 ? 30 : 40);
+
+  // Rasterise text into an offscreen canvas and pick N points from it. Extras stack behind as depth layers.
+  const view = { w: 1, h: 1 };
+  let size = 0.1, targetSize = 0.1;
+  // Rasterise text, crop to its ink, and pick N points relative to the ink's centre. Extras stack behind as depth layers.
+  // Each line picks the width-axis step closest to the widest line, then a small horizontal scale makes the lines exactly equal.
+  const STRETCH = ['ultra-condensed', 'extra-condensed', 'condensed', 'semi-condensed', 'normal', 'semi-expanded', 'expanded', 'extra-expanded', 'ultra-expanded'];
+  function sample(text, base = 'normal') {
+    const lines = text.split('|'), fs = 260, lead = 0.78;
+    const c = document.createElement('canvas'), x = c.getContext('2d', { willReadFrequently: true });
+    const measure = (l, k) => { x.font = `900 ${fs}px Anybody, "Arial Black", sans-serif`; x.fontStretch = k; return x.measureText(l).width; };
+    const T = Math.max(...lines.map((l) => measure(l, base)));
+    const fit = lines.map((l) => STRETCH.map((k) => [k, measure(l, k)]).reduce((a, b) => (Math.abs(b[1] - T) < Math.abs(a[1] - T) ? b : a)));
+    const W = Math.ceil(T) + 40, H = Math.ceil((lines.length - 1) * fs * lead + fs * 1.1);
+    c.width = W; c.height = H;
+    x.textBaseline = 'middle'; x.fillStyle = '#000';
+    lines.forEach((l, i) => {
+      const [k, w] = fit[i];
+      x.font = `900 ${fs}px Anybody, "Arial Black", sans-serif`; x.fontStretch = k;
+      x.save(); x.translate(20, fs * 0.55 + i * fs * lead); x.scale(T / w, 1); x.fillText(l, 0, 0); x.restore();
+    });
+    const d = x.getImageData(0, 0, W, H).data;
+    let area = 0, x0 = W, x1 = 0, y0 = H, y1 = 0;
+    for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) if (d[(py * W + px) * 4 + 3] > 128) {
+      area++; if (px < x0) x0 = px; if (px > x1) x1 = px; if (py < y0) y0 = py; if (py > y1) y1 = py;
+    }
+    const step = Math.max(1.5, Math.sqrt(area / (N * 0.88))), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, pts = [];
+    for (let py = y0 + step / 2; py <= y1; py += step)
+      for (let px = x0 + step / 2; px <= x1; px += step)
+        if (d[((py | 0) * W + (px | 0)) * 4 + 3] > 128) pts.push([px - cx, cy - py]);
+    for (let i = pts.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [pts[i], pts[j]] = [pts[j], pts[i]]; }
+    return { pts, step, bw: x1 - x0, bh: y1 - y0 };
+  }
+
+  // Fit the ink into a box and anchor it. Hero: bottom-left poster. Sections: right half on desktop, top on phones.
+  let shape = 'DAKSH|JAIN', layout = { x: 0, y: 0 };
+  function setShape(text, kick) {
+    shape = text;
+    const hero = text.includes('|'), mobile = innerWidth < 760;
+    const g = view.w * (Math.min(48, Math.max(16, innerWidth * 0.04)) / innerWidth); // CSS gutter in world units
+    const { pts, step, bw, bh } = sample(text, mobile ? 'condensed' : 'normal');
+    const intro = document.querySelector('#top .copy'), room = innerHeight - (intro.offsetTop + intro.offsetHeight) - 32; // px left under the intro
+    const [fw, fh] = hero ? [view.w - 2 * g, view.h * Math.max(0.25, room / innerHeight) - g] : mobile ? [view.w - 2 * g, view.h * 0.3] : [view.w * 0.44, view.h * 0.5];
+    const s = Math.min(fw / bw, fh / bh), w = bw * s, h = bh * s;
+    layout = hero ? { x: -view.w / 2 + g + w / 2, y: -view.h / 2 + g * (mobile ? 1.5 : 1) + h / 2 }
+      : mobile ? { x: 0, y: view.h / 2 - view.h * 0.1 - h / 2 } : { x: view.w * 0.24, y: 0 };
+    const cube = step * s, out = [];
+    for (let i = 0; i < N; i++) {
+      const p = pts[i % pts.length], layer = Math.floor(i / pts.length);
+      out.push([p[0] * s, p[1] * s, -layer * cube]);
+    }
+    out.sort((a, b) => a[0] - b[0]); // packets keep their left-to-right order, so morphs sweep instead of scramble
+    targetSize = cube * 0.82;
+    for (let i = 0; i < N; i++) {
+      tgt.set(out[i], i * 3);
+      if (kick && !reduce && state[i] === 0) vel[i * 3 + 2] += 4 + Math.random() * 8; // shockwave toward the camera
+    }
+  }
+
+  function resize() {
+    const w = innerWidth, h = innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    view.h = 2 * camera.position.z * Math.tan((camera.fov * Math.PI) / 360);
+    view.w = view.h * camera.aspect;
+    setShape(shape, false);
+  }
+
+  // Pointer in group-local space, for the hover repel and click smash.
+  const ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), hit = new THREE.Vector3();
+  const mouse = { x: 0, y: 0, lx: 1e6, ly: 1e6 };
+  function toLocal(cx, cy) {
+    ray.setFromCamera({ x: (cx / innerWidth) * 2 - 1, y: -(cy / innerHeight) * 2 + 1 }, camera);
+    if (!ray.ray.intersectPlane(plane, hit)) return null;
+    return group.worldToLocal(hit.clone());
+  }
+  addEventListener('pointermove', (e) => {
+    mouse.x = e.clientX / innerWidth - 0.5; mouse.y = e.clientY / innerHeight - 0.5;
+    const p = toLocal(e.clientX, e.clientY); if (p) { mouse.lx = p.x; mouse.ly = p.y; }
+  });
+  addEventListener('pointerdown', (e) => {
+    if (e.target.closest('a, button, code, nav')) return;
+    const p = toLocal(e.clientX, e.clientY); if (p) smash(p.x, p.y, view.w * 0.08);
+  });
+
+  function smash(cx, cy, r) {
+    const r2 = r * r;
+    for (let i = 0; i < N; i++) {
+      const k = i * 3, dx = pos[k] - cx, dy = pos[k + 1] - cy, d2 = dx * dx + dy * dy;
+      if (d2 > r2 || state[i]) continue;
+      const d = Math.sqrt(d2) || 0.001, f = (1 - d / r) * (6 + Math.random() * 10);
+      vel[k] += (dx / d) * f; vel[k + 1] += (dy / d) * f + 2; vel[k + 2] += 3 + Math.random() * 9;
+      spin[i * 2] = (Math.random() - 0.5) * 14; spin[i * 2 + 1] = (Math.random() - 0.5) * 14;
+      state[i] = 1; tries[i] = 0; timer[i] = 0.35 + Math.random() * 0.7;
+      stats.drop++;
+    }
+  }
+
+  // Chaos mode: random strikes, and every retry fails 36% of the time (vs 10% normally).
+  let chaos = false, nextStrike = 0;
+  $('#chaos').addEventListener('click', (e) => {
+    chaos = !chaos;
+    e.currentTarget.setAttribute('aria-pressed', chaos);
+    e.currentTarget.lastElementChild.textContent = chaos ? 'Stop failure injection' : 'Inject 36% failure';
+  });
+
+  // Morph to whichever section is mostly on screen.
+  const io = new IntersectionObserver((es) => es.forEach((en) => en.isIntersecting && en.target.dataset.shape !== shape && setShape(en.target.dataset.shape, true)), { threshold: 0.55 });
+  document.querySelectorAll('section[data-shape]').forEach((s) => io.observe(s));
+
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), eul = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3(), c = new THREE.Color();
+  const clock = new THREE.Clock();
+  let hudT = 0;
+  function frame() {
+    const dt = Math.min(clock.getDelta(), 1 / 30), t = clock.elapsedTime;
+    const fail = chaos ? 0.36 : 0.1;
+    size += (targetSize - size) * Math.min(1, dt * 4);
+
+    if (chaos && t > nextStrike && !reduce) {
+      const i = (Math.random() * N) | 0;
+      smash(tgt[i * 3], tgt[i * 3 + 1], view.w * (0.04 + Math.random() * 0.06));
+      nextStrike = t + 0.35 + Math.random() * 0.6;
+    }
+
+    group.position.x += (layout.x - group.position.x) * Math.min(1, dt * 3);
+    group.position.y += (layout.y - group.position.y) * Math.min(1, dt * 3);
+    if (!reduce) {
+      group.rotation.y += (mouse.x * 0.35 - group.rotation.y) * Math.min(1, dt * 2);
+      group.rotation.x += (mouse.y * 0.2 - group.rotation.x) * Math.min(1, dt * 2);
+    }
+
+    const spring = Math.pow(0.004, dt), air = Math.pow(0.5, dt), rep = view.w * 0.045, rep2 = rep * rep;
+    let retrying = 0;
+    for (let i = 0; i < N; i++) {
+      const k = i * 3, r = i * 2;
+      if (state[i] === 0) {
+        const wave = reduce ? 0 : Math.sin(t * 1.4 + tgt[k] * 0.5 + tgt[k + 1] * 0.3) * 0.12;
+        vel[k] += (tgt[k] - pos[k]) * 60 * dt;
+        vel[k + 1] += (tgt[k + 1] - pos[k + 1]) * 60 * dt;
+        vel[k + 2] += (tgt[k + 2] + wave - pos[k + 2]) * 60 * dt;
+        const dx = pos[k] - mouse.lx, dy = pos[k + 1] - mouse.ly, d2 = dx * dx + dy * dy;
+        if (d2 < rep2 && !reduce) { const d = Math.sqrt(d2) || 0.001, f = (1 - d / rep) * 90 * dt; vel[k] += (dx / d) * f; vel[k + 1] += (dy / d) * f; vel[k + 2] += f * 1.5; }
+        vel[k] *= spring; vel[k + 1] *= spring; vel[k + 2] *= spring;
+        rot[r] *= 1 - Math.min(1, dt * 5); rot[r + 1] *= 1 - Math.min(1, dt * 5);
+      } else {
+        retrying++;
+        vel[k + 1] -= 9 * dt;
+        vel[k] *= air; vel[k + 1] *= air; vel[k + 2] *= air;
+        rot[r] += spin[r] * dt; rot[r + 1] += spin[r + 1] * dt;
+        if ((timer[i] -= dt) <= 0) {
+          if (Math.random() < fail && tries[i] < 5) {
+            tries[i]++; flash[i] = 1;
+            timer[i] = Math.min(3, 0.25 * 2 ** tries[i]) * (0.5 + Math.random()); // exponential backoff with jitter
+            vel[k + 1] += 4 + Math.random() * 3;
+          } else { state[i] = 0; stats.ok++; }
+        }
+      }
+      pos[k] += vel[k] * dt; pos[k + 1] += vel[k + 1] * dt; pos[k + 2] += vel[k + 2] * dt;
+      flash[i] = Math.max(0, flash[i] - dt * 3);
+
+      eul.set(rot[r], rot[r + 1], 0);
+      q.setFromEuler(eul);
+      v.set(pos[k], pos[k + 1], pos[k + 2]);
+      sc.setScalar(size);
+      m.compose(v, q, sc);
+      mesh.setMatrixAt(i, m);
+      c.copy(state[i] ? FAULT : WHITE).lerp(RETRY, flash[i]);
+      mesh.setColorAt(i, c);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.instanceColor.needsUpdate = true;
+    renderer.render(scene, camera);
+
+    if (t - hudT > 0.1) {
+      hudT = t;
+      $('#h-total').textContent = N.toLocaleString();
+      $('#h-drop').textContent = stats.drop.toLocaleString();
+      $('#h-retry').textContent = retrying.toLocaleString();
+      $('#h-ok').textContent = stats.ok.toLocaleString();
+    }
+    requestAnimationFrame(frame);
+  }
+
+  addEventListener('resize', resize);
+  // Sample only once the display face is ready, or the packets spell the fallback font.
+  document.fonts.load('900 100px Anybody').catch(() => {}).finally(() => { resize(); frame(); });
+})();
+</script>
+</body>
+</html>
