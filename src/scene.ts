@@ -378,7 +378,7 @@ export async function startScene(glTimer: number): Promise<void> {
   /* ---------------- cards ---------------- */
   const W = 2.5, H = 3.5, T = 0.011, BASE = 0.006;
   const backMat = new THREE.MeshStandardMaterial({ map: drawBack(), roughness: 0.42, metalness: 0, side: THREE.BackSide, alphaTest: 0.5 });
-  const SP: Record<SpringKey, [number, number]> = { x: [120, 0.82], z: [120, 0.82], yaw: [110, 0.86], flip: [85, 0.9], lift: [210, 0.8], slide: [170, 0.7], bend: [190, 0.4], up: [70, 0.93], y0: [210, 1] };
+  const SP: Record<SpringKey, [number, number]> = { x: [120, 0.82], z: [120, 0.82], yaw: [110, 0.86], flip: [85, 0.9], lift: [210, 0.8], slide: [170, 0.7], bend: [190, 1], up: [70, 0.93], y0: [210, 1] };
   const springKeys = Object.keys(SP) as SpringKey[];
   const cards: DeckCard[] = D.cards.map((data, i) => {
     const geo = new THREE.PlaneGeometry(W, H, 4, 14).rotateX(-Math.PI / 2);
@@ -523,16 +523,23 @@ export async function startScene(glTimer: number): Promise<void> {
     order.forEach((c, k) => later(k * 24, () => { Object.assign(c.t, { x: at.x, z: at.z, yaw: near(yaw, c.p.yaw), y0: BASE + k * T, flip: Math.PI, slide: 0 }); c.free = false; }));
     sfx.swish(0.5);
     await wait(760);
-    // cut into two packets and bow them
+    // cut into two packets and bow them. Every card keeps the same yaw and bows the same way, and the bend
+    // spring is critically damped, so a card above another is never less bent than it: stacked bows can't cross.
+    // Each packet keeps its height until the two are clear of each other (1.6 apart clears a card's
+    // width), then both rise above the merged deck's height, so riffled cards fall in underneath.
     const h = Math.ceil(N / 2), A = order.slice(0, h), B = order.slice(h);
-    [A, B].forEach((pk, side) => pk.forEach((c, k) => {
+    [A, B].forEach((pk, side) => pk.forEach((c) => {
       const sgn = side ? 1 : -1;
-      Object.assign(c.t, { x: at.x + ax.x * 1.42 * sgn, z: at.z + ax.z * 1.42 * sgn, yaw: near(yaw + sgn * 0.16, c.p.yaw), y0: BASE + k * T, bend: 0.3 });
+      Object.assign(c.t, { x: at.x + ax.x * 1.6 * sgn, z: at.z + ax.z * 1.6 * sgn, yaw: near(yaw, c.p.yaw), bend: 0.3 });
     }));
-    await wait(520);
-    // riffle: the packets let go from the bottom, interleaving
+    await wait(420);
+    // the riffle order is decided now so each card can wait at a height ranked by when it will drop: wherever
+    // two cards overlap, the one released later sits above, and is at least as bowed as, the one released before
     const out: DeckCard[] = [], a = A.slice(), b = B.slice();
     while (a.length || b.length) out.push((!b.length || (a.length && Math.random() < a.length / (a.length + b.length))) ? a.shift()! : b.shift()!);
+    out.forEach((c, k) => { c.t.y0 = BASE + (N + k) * T; });
+    await wait(200);
+    // riffle: the packets let go from the bottom, interleaving
     sfx.riffle(N + 4);
     out.forEach((c, k) => later(k * 30, () => Object.assign(c.t, { x: at.x, z: at.z, yaw: near(yaw, c.p.yaw), y0: BASE + k * T, bend: 0 })));
     order = out;
@@ -737,7 +744,9 @@ export async function startScene(glTimer: number): Promise<void> {
         c.group.position.y += Math.sin(Math.PI * Math.min(u, 1)) * 1.6;
         c.group.quaternion.slerpQuaternions(qT, qC, Math.min(u, 1));
       } else { c.group.position.copy(pT); c.group.quaternion.copy(qT); }
-      bendGeo(c, c.p.bend + Math.sin(Math.PI * Math.min(u, 1)) * 0.2 + (drag && drag.c === c ? 0.05 : 0));
+      // Bow away from the table whichever side is up, and never past flat: a face-down card bent the
+      // other way pushes its ends through the felt, and spring overshoot dips them into the card below.
+      bendGeo(c, Math.max(0, c.p.bend + Math.sin(Math.PI * Math.min(u, 1)) * 0.2 + (drag && drag.c === c ? 0.05 : 0)) * Math.cos(c.p.flip));
       c.face.castShadow = u < 0.35; // a card held up to your eye shouldn't throw a slab of shadow
       c.faceMat.emissiveIntensity = 0.05 + 0.82 * Math.min(u, 1) + (c === focused ? 0.12 : 0);
     }
