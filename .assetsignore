@@ -1,9 +1,0 @@
-.git
-.claude
-.playwright-mcp
-.wrangler
-node_modules
-wrangler.jsonc
-.gitignore
-.assetsignore
-.DS_Store
