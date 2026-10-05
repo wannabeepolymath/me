@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Daksh Jain</title>
+<meta name="description" content="You're in an auto in Bangalore and the meter is already running. Tell the driver where to go and meet Daksh Jain, wannabe polymath.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rozha+One&family=Mukta:wght@400;500;600;700;800&family=DotGothic16&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Tamma+2:wght@700&text=%E0%B2%8E%E0%B2%B2%E0%B3%8D%E0%B2%B2%E0%B2%BF%E0%B2%97%E0%B3%86%3F&display=swap" rel="stylesheet">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js" integrity="sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k" crossorigin="anonymous" defer></script>
+<style>
+/* Tokens. Interior is quiet silhouette; the painted shop boards are where all the loudness goes. */
+:root{
+  --vinyl:#120d17;      /* canopy + frame, black vinyl lit purple by dusk */
+  --sodium:#ff9a3c;     /* streetlights */
+  --auto:#ffcd00;       /* auto-rickshaw yellow */
+  --led:#ff3b22;        /* fare meter */
+  --paper:#fffdf7;      /* the driver's speech bubble */
+  --ink:#17110b;
+  --b-red:#c81f17; --b-blue:#1747a6; --b-green:#0b5d3b; --b-yellow:#ffd400;
+  /* geometry, rewritten by layout() */
+  --canopy:100px; --xL:130px; --yB:630px; --dx:720px; --hr:52px;
+  --fx:170px; --fy:150px; --fw:900px; --fh:430px; --bw:640px; --bh:430px;
+  --mx:940px; --my:640px; --mw:200px; --qx:1170px; --qy:650px; --qw:110px;
+  --hx:880px; --hy:700px; --hs:52px; --rx:1150px; --ry:90px; --rw:150px; --rh:46px;
+  --nx:1170px; --ny:130px; --ux:90px; --uw:470px; --amp:3deg;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#1a1226;color:#fff;font-family:Mukta,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--auto);outline-offset:3px}
+
+/* ---------- the world behind the glass ---------- */
+#world{position:fixed;inset:0;z-index:0}
+#world canvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .9s}
+#world.live canvas{opacity:1}
+#flatsky{position:absolute;inset:0;background:
+  radial-gradient(60vmax 22vmax at 50% 63%,rgba(255,150,80,.55),transparent 70%),
+  linear-gradient(#150e25 0%,#3a1f47 34%,#a4513f 58%,#2a1a22 61%,#140e16 100%)}
+#flatsky i{position:absolute;border-radius:50%;filter:blur(6px);background:var(--sodium);opacity:.55;animation:drift 7s linear infinite}
+@keyframes drift{from{transform:translate(0,0) scale(.4)}to{transform:translate(var(--tx),var(--ty)) scale(1.6);opacity:0}}
+#world.live #flatsky{display:none}
+
+/* boards live here: inside CSS3D in 3D mode, in a plain box otherwise */
+#stage{position:fixed;inset:0;z-index:1;pointer-events:none}
+body.flat #stage{left:var(--fx);top:var(--fy);width:var(--fw);height:var(--fh);display:flex;align-items:center;justify-content:center}
+#stage > .board{display:none;pointer-events:auto}
+body.flat #stage > .board.on{display:block;animation:pull .5s ease-out}
+@keyframes pull{from{opacity:0;transform:scale(.94)}}
+.board.flick{animation:flick .65s linear}
+@keyframes flick{0%,7%{filter:brightness(.45)}8%,15%{filter:brightness(1.05)}16%,27%{filter:brightness(.5)}28%,32%{filter:brightness(1)}33%,44%{filter:brightness(.55)}45%,100%{filter:brightness(1)}}
+
+/* ---------- the cab ---------- */
+#cab{position:fixed;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.tas{transform-box:fill-box;transform-origin:50% 0;animation:swing 1.3s ease-in-out infinite alternate}
+@keyframes swing{from{rotate:calc(var(--amp) * -1)}to{rotate:var(--amp)}}
+#nimbu{position:fixed;z-index:3;left:var(--nx);top:var(--ny);width:34px;pointer-events:none;transform-origin:50% 0;animation:swing 1.7s ease-in-out infinite alternate}
+#nimbu svg{display:block;width:100%;height:auto}
+
+#paint{position:fixed;z-index:3;left:calc(var(--xL) - 4px);top:calc(var(--canopy) * .13);display:flex;align-items:baseline;gap:.9rem;pointer-events:none}
+#paint h1{margin:0;font:400 calc(var(--canopy) * .5)/1 'Rozha One',serif;letter-spacing:.035em;text-transform:uppercase;color:var(--auto);text-shadow:.035em .05em 0 #c81f17,.07em .095em 0 #000}
+#paint p{margin:0;font:600 italic clamp(13px,1.25vw,17px)/1 Mukta;color:#8fd7a0}
+
+#mirror{position:fixed;z-index:3;left:var(--rx);top:var(--ry);width:var(--rw);height:var(--rh);border-radius:12px;pointer-events:none;
+  background:linear-gradient(160deg,#3a3242 0%,#1b1620 45%,#0d0a10 100%);border:5px solid #07060a;box-shadow:0 6px 14px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,255,255,.08);
+  display:flex;align-items:center;justify-content:center;gap:16%}
+#mirror::before{content:'';position:absolute;left:50%;top:calc(var(--ry) * -1);width:6px;height:var(--ry);margin-left:-3px;background:#07060a}
+#mirror::after{content:'';position:absolute;inset:0;border-radius:8px;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.1) 42%,transparent 50%)}
+.eye{position:relative;width:20%;height:42%;background:#e7d9c4;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;overflow:hidden;transition:transform .15s}
+.eye::before{content:'';position:absolute;left:-10%;right:-10%;top:-10%;height:30%;background:#2b1d16;border-radius:0 0 50% 50%;z-index:2;transition:height .12s}
+.eye i{position:absolute;left:50%;top:50%;width:46%;aspect-ratio:1;margin:-23% 0 0 -23%;border-radius:50%;background:#1a0f0a;box-shadow:inset 1px 1px 0 2px #4a2c1d;translate:var(--px,0) var(--py,0);transition:translate .25s}
+#mirror.blink .eye::before{height:110%}
+#mirror.wide .eye{transform:scaleY(1.25)}
+#mirror.wide .eye::before{height:6%}
+
+/* ---------- the driver ---------- */
+#driver{position:fixed;z-index:4;left:var(--ux);bottom:18px;width:var(--uw);background:var(--paper);color:var(--ink);border-radius:22px;padding:14px 16px 12px;box-shadow:0 14px 34px rgba(0,0,0,.5);--focus:var(--b-blue)}
+#driver::after{content:'';position:absolute;right:-16px;top:26px;border:12px solid transparent;border-left:20px solid var(--paper);border-right:0}
+#driver :focus-visible{outline-color:var(--focus)}
+.says{display:flex;align-items:baseline;gap:.55rem;margin:0 2px 10px;font:600 17px/1.3 Mukta}
+.says .kn{font:700 19px/1 'Baloo Tamma 2',Mukta;color:var(--b-red)}
+.stops{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0;padding:0;list-style:none}
+.stop{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;padding:7px 8px 6px;border:2px solid transparent;border-radius:12px;background:#f3eee3;cursor:pointer;text-align:left;transition:background .15s,border-color .15s}
+.stop:hover{background:#e9e1d0}
+.stop[aria-current="true"]{border-color:var(--ink);background:#fff}
+.stop b{font:400 clamp(14px,1.2vw,17px)/1.05 'Rozha One',serif;white-space:nowrap;padding:4px 8px 2px;border-radius:3px;background:var(--c);color:var(--t);text-transform:uppercase;letter-spacing:.02em}
+.stop span{font:500 15px/1.2 Mukta;color:#3b332a;padding-left:2px}
+.keys{margin:8px 2px 0;font:500 13px/1.2 Mukta;color:#6b6155}
+.keys kbd{font:700 12px Mukta;border:1px solid #c9bfae;border-bottom-width:2px;border-radius:4px;padding:0 5px;background:#fff}
+
+#meter{position:fixed;z-index:4;left:var(--mx);top:var(--my);width:var(--mw);padding:7px 10px 9px;border-radius:10px;pointer-events:none;
+  background:linear-gradient(#18151a,#060507);border:2px solid #36303c;box-shadow:0 8px 20px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.07)}
+.mq{overflow:hidden;white-space:nowrap;font:13px/1.25 DotGothic16,monospace;color:#ff8f3a;border-bottom:1px solid #2a242d;padding-bottom:5px;margin-bottom:6px}
+.mq span{display:inline-block;animation:mq 16s linear infinite}
+@keyframes mq{to{transform:translateX(-50%)}}
+.mrow{display:flex;align-items:center;gap:8px}
+.lab{font:600 12px/1 Mukta;color:#a297aa}
+#fare svg{height:34px;display:block;filter:drop-shadow(0 0 4px rgba(255,59,34,.75))}
+#km svg{height:15px;display:block;filter:drop-shadow(0 0 3px rgba(255,59,34,.6))}
+.on{fill:var(--led)} .off{fill:#1d0604}
+.lamp{margin-left:auto;font:700 11px/1 Mukta;color:#5a4320;background:#1d170f;border-radius:3px;padding:3px 6px 2px}
+.lamp.lit{color:#1a1000;background:#ffb000;box-shadow:0 0 12px #ffb000}
+
+#horn{position:fixed;z-index:4;left:var(--hx);top:var(--hy);width:var(--hs);height:var(--hs);border-radius:50%;border:3px solid var(--b-red);padding:0;cursor:pointer;
+  background:radial-gradient(circle at 38% 32%,#4a4550,#0c0b0e 70%);color:var(--auto);font:800 12px/1 Mukta;box-shadow:0 5px 12px rgba(0,0,0,.65);transition:transform .08s}
+#horn:active,#horn.press{transform:scale(.9)}
+
+#qr{position:fixed;z-index:4;left:var(--qx);top:var(--qy);width:var(--qw);padding:8px 8px 7px;border:0;border-radius:6px;background:#fff;color:#111;cursor:pointer;rotate:-4deg;
+  box-shadow:0 10px 22px rgba(0,0,0,.55);font:800 12px/1.05 Mukta;text-align:center;transition:rotate .2s}
+#qr:hover{rotate:0deg}
+#qr::before,#qr::after{content:'';position:absolute;top:-7px;width:34px;height:13px;background:rgba(255,236,190,.6)}
+#qr::before{left:-8px;rotate:-28deg}#qr::after{right:-8px;rotate:24deg}
+#qr .code{display:block;margin:5px 0 4px;aspect-ratio:1;background:repeating-conic-gradient(#111 0 25%,#fff 0 50%) 0 0/20% 20%}
+#qr .code svg{display:block;width:100%;height:100%;background:#fff}
+#qr small{display:block;font:500 10.5px/1.15 Mukta;color:#555}
+
+#sound{position:fixed;z-index:4;top:12px;right:14px;padding:4px 12px 3px;border:1.5px solid rgba(255,205,0,.45);border-radius:999px;background:rgba(18,13,23,.6);color:var(--auto);font:600 13px/1.2 Mukta;cursor:pointer}
+#sound[aria-pressed="true"]{background:var(--auto);color:var(--ink)}
+
+/* ---------- painted shop boards ---------- */
+.board{--bg:var(--b-red);--fg:var(--b-yellow);--tx:#fff4e2;--sh:#000;--edge:var(--fg);
+  container-type:inline-size;width:var(--bw);max-height:var(--bh);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;
+  padding:26px 30px 24px;border-radius:5px;color:var(--tx);font:400 17px/1.5 Mukta;
+  background:
+    linear-gradient(rgba(255,255,255,.16),rgba(255,255,255,0) 38%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(90deg,rgba(0,0,0,.05) 0 2px,transparent 2px 9px),
+    var(--bg);
+  box-shadow:inset 0 0 0 6px var(--bg),inset 0 0 0 9px var(--edge),0 0 0 1px rgba(0,0,0,.5)}
+.board :focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.board:focus{outline:none}
+.board h2{margin:0 0 .3em;font:400 clamp(28px,8.6cqi,60px)/.98 'Rozha One',serif;text-transform:uppercase;letter-spacing:.01em;color:var(--fg);text-shadow:.03em .045em 0 var(--sh)}
+.board h3{margin:1em 0 .4em;font:400 21px/1 'Rozha One',serif;color:var(--fg)}
+.board p{margin:0 0 .7em;max-width:60ch}
+.board a{color:inherit;text-decoration-thickness:2px;text-underline-offset:3px}
+.prop{font:700 16px/1.2 Mukta;color:var(--fg);margin-bottom:.35em !important}
+.tag{font:600 18px/1.35 Mukta;color:var(--fg)}
+.fill{font-style:italic;font-weight:500;opacity:.85;border-bottom:2px dashed currentColor;padding:0 2px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:0;padding:0;list-style:none}
+.chips li{font:600 15.5px/1.2 Mukta;padding:4px 10px 3px;border-radius:3px;background:var(--fg);color:var(--bg)}
+.chips li:has(.fill){background:transparent;color:var(--fg);box-shadow:inset 0 0 0 2px var(--fg)}
+.chips .fill{border:0;opacity:1}
+.works{display:grid;grid-template-columns:1fr 1fr;gap:4px 22px;margin:.6em 0 .9em;padding:0;list-style:none}
+.works li{padding:7px 0 8px;border-bottom:2px dotted rgba(255,255,255,.35);display:flex;flex-direction:column}
+.works b{font:400 22px/1.05 'Rozha One',serif;color:var(--fg)}
+.works span{font:500 15.5px/1.3 Mukta}
+.foot{display:flex;flex-wrap:wrap;gap:6px 22px;font:600 15.5px/1.3 Mukta;margin:0 !important}
+.menu{margin:.5em 0 .9em}
+.menu div{display:flex;align-items:baseline;gap:8px;padding:5px 0}
+.menu dt{font:700 17px/1.2 Mukta;white-space:nowrap}
+.menu div::after{content:'';order:1;flex:1;border-bottom:2px dotted rgba(255,255,255,.4);min-width:16px}
+.menu dd{order:2;margin:0;font:400 19px/1.15 'Rozha One',serif;color:var(--fg);text-align:right}
+.menu dd .fill{font:italic 500 16px/1.2 Mukta}
+.lines{margin:.6em 0 .4em;padding:0;list-style:none}
+.lines li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:9px 0;border-bottom:2px solid rgba(0,0,0,.14)}
+.lines .kind{font:400 17px/1 'Rozha One',serif;text-transform:uppercase;padding:5px 9px 3px;border-radius:3px;background:var(--b-red);color:var(--b-yellow);min-width:6.4em;text-align:center}
+.lines a{font:700 19px/1.2 Mukta}
+.copy{padding:3px 10px;border:2px solid currentColor;border-radius:999px;background:transparent;font:700 13px/1.2 Mukta;cursor:pointer}
+.stdwrap{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start}
+.stdqr{width:118px;background:#fff;padding:7px;border-radius:4px;box-shadow:0 0 0 2px var(--ink)}
+.stdqr svg{display:block;width:100%;height:auto}
+.stdqr p{margin:4px 0 0 !important;font:700 11px/1.1 Mukta;color:var(--ink);text-align:center}
+.askbtn{margin-top:2px;padding:6px 14px 5px;border:0;border-radius:3px;background:var(--fg);color:var(--bg);font:400 17px/1 'Rozha One',serif;text-transform:uppercase;cursor:pointer}
+
+.b-store{--bg:var(--b-red);--fg:var(--b-yellow);--tx:#fff2df;--sh:#3a0400}
+.b-works{--bg:var(--b-blue);--fg:#ffffff;--tx:#e6edff;--sh:#c81f17;--edge:var(--b-yellow)}
+.b-works .works b{color:var(--b-yellow)}
+.b-darshini{--bg:var(--b-green);--fg:#ffe9a8;--tx:#eaf6ee;--sh:#02261a}
+.b-std{--bg:var(--b-yellow);--fg:var(--b-red);--tx:var(--ink);--sh:#000;--edge:var(--b-red)}
+.b-std .lines a{color:var(--ink)}
+
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- phones ---------- */
+@media (max-width:719px){
+  #driver{left:10px;right:10px;width:auto;bottom:calc(10px + env(safe-area-inset-bottom));padding:11px 11px 10px;border-radius:18px}
+  #driver::after{right:auto;left:calc(50% - 12px);top:-18px;border:12px solid transparent;border-bottom:18px solid var(--paper);border-top:0}
+  .says{font-size:15.5px;margin-bottom:8px}
+  .stop{padding:6px 7px 5px}
+  .stop b{font-size:15px}
+  .stop span{font-size:13.5px}
+  .keys{display:none}
+  #paint{gap:.5rem;flex-direction:column;align-items:flex-start;top:9px}
+  #paint p{font-size:12px}
+  #sound{top:10px;right:10px;font-size:12px;padding:3px 10px 2px}
+  .board{padding:18px 18px 16px;font-size:15.5px}
+  .tag{font-size:16px}
+  .works{gap:2px 14px}
+  .works b{font-size:18px}
+  .works span{font-size:14px}
+  .stdwrap{grid-template-columns:1fr}
+  .stdqr{display:none}
+  .lines a{font-size:17px}
+  .lines .kind{font-size:15px}
+  .mq{font-size:12px}
+  #qr small{display:none}
+  #qr{font-size:10.5px;padding:6px 6px 5px}
+  .says{font-size:15px}
+  .lines .kind{min-width:0}
+  #fare svg{height:26px}
+}
+body.short .stop span,body.short .keys{display:none}
+body.short .says{font-size:14px;margin-bottom:6px}
+body.short #driver{padding:9px 10px 8px;bottom:10px}
+body.short .mq,body.short #meter .mrow:last-child{display:none}
+@media (prefers-reduced-motion:reduce){
+  .tas,#nimbu,.mq span,#flatsky i{animation:none}
+  body.flat .board.on{animation:none}
+  .eye i{transition:none}
+}
+</style>
+</head>
+<body>
+<div id="world"><div id="flatsky"></div></div>
+
+<svg id="cab" aria-hidden="true"></svg>
+<div id="nimbu" aria-hidden="true"><svg viewBox="0 0 40 150"><path d="M20 0V140" stroke="#d9cdb4" stroke-width="1.2"/><ellipse cx="20" cy="24" rx="11.5" ry="13" fill="#f0d43a"/><ellipse cx="16" cy="19" rx="4" ry="5" fill="#fff6a8" opacity=".55"/><g fill="#2f9a3a" stroke="#1d6b27" stroke-width=".8"><path d="M20 42c7 4 6 15 0 22 2-8-2-14 0-22z"/><path d="M20 60c-7 4-6 15 0 22-2-8 2-14 0-22z"/><path d="M20 78c7 4 6 15 0 22 2-8-2-14 0-22z"/><path d="M20 96c-7 4-6 15 0 22-2-8 2-14 0-22z"/><path d="M20 114c6 3 5 12 0 18 1-6-2-11 0-18z"/></g><ellipse cx="20" cy="142" rx="6" ry="5" fill="#0b0a0c"/></svg></div>
+<div id="mirror" aria-hidden="true"><span class="eye"><i></i></span><span class="eye"><i></i></span></div>
+
+<header id="paint"><h1>Daksh Jain</h1><p>wannabe polymath, Bangalore</p></header>
+
+<section id="driver" aria-label="Tell the driver where to go">
+  <p class="says"><span class="kn" lang="kn" aria-hidden="true">ಎಲ್ಲಿಗೆ?</span><span id="line" aria-live="polite">Meter's running, saar. Where to?</span></p>
+  <ul class="stops" id="stops"></ul>
+  <p class="keys">Or press <kbd>1</kbd>–<kbd>4</kbd>. <kbd>H</kbd> honks.</p>
+</section>
+
+<div id="meter" aria-hidden="true">
+  <div class="mq"><span id="mq"></span></div>
+  <div class="mrow"><span class="lab">Fare ₹</span><span id="fare"></span></div>
+  <div class="mrow" style="margin-top:5px"><span class="lab">Km</span><span id="km"></span><span class="lamp" id="wait">Wait</span></div>
+</div>
+<button id="horn" type="button" aria-label="Honk the horn">Honk</button>
+<button id="qr" type="button" aria-label="Pay the fare: go to the STD booth to say hi">Scan &amp; say hi<span class="code" id="qrcode"></span><small>Fare payable in hellos</small></button>
+<button id="sound" type="button" aria-pressed="false">Sound off</button>
+
+<main id="stage" aria-label="Stops on this ride"></main>
+
+<script type="module">
+/* =====================================================================
+   Daksh: edit this object. Anything starting with "[fill" renders as a
+   dashed, unpainted slot on the boards until you replace it.
+   ===================================================================== */
+const DAKSH = {
+  name: "Daksh Jain",
+  city: "Bangalore",
+  study: "computer science at BITS Pilani, a bachelor's and a master's, finishing in 2027",
+  about: "[fill: a line or two about you, in your own words]",
+  dealersIn: ["building software", "[fill: an interest]", "[fill: an interest]", "[fill: an interest]", "[fill: something you're bad at and love anyway]"],
+  builds: [
+    { name: "Parla", what: "voice dictation app for macOS", url: "" },
+    { name: "Burmese", what: "a desktop companion pet", url: "" },
+    { name: "WebSocket multiplexer", what: "written in Rust", url: "" },
+    { name: "Redis clone", what: "written in Go", url: "" },
+    { name: "Solana game", what: "played inside Telegram", url: "" },
+    { name: "Emergent", what: "worked on AI-agent backends", url: "" },
+  ],
+  specials: [
+    ["Reading", "[fill: a book]"],
+    ["On repeat", "[fill: a song or album]"],
+    ["Learning", "[fill: a skill]"],
+    ["Weekends", "[fill: where to find you]"],
+    ["Can't stop thinking about", "[fill: an idea]"],
+  ],
+  resume: "[fill: link to your résumé]",
+  email: "dakshjainn2004@gmail.com",
+  x: "dakshhjainn",
+  github: "wannabeepolymath",
+};
+
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const sstep = (a, b, u) => { const t = clamp((u - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const isFill = s => typeof s === "string" && s.startsWith("[fill");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const txt = s => isFill(s) ? `<span class="fill">${esc(s)}</span>` : esc(s);
+const rmq = matchMedia("(prefers-reduced-motion: reduce)");
+let reduced = rmq.matches;
+rmq.addEventListener("change", e => { reduced = e.matches; });
+const ext = 'target="_blank" rel="noopener"';
+
+/* ---------- the four stops ---------- */
+const STOPS = [
+  { id: "store", sign: "General Stores", plain: "Who Daksh is", c: "var(--b-red)", t: "var(--b-yellow)", bg: "#c81f17", wall: "#e3b25a",
+    going: "General Stores. Hold on, shortcut.", here: "Reached. Read slowly, meter's on.", mq: "GENERAL STORES" },
+  { id: "works", sign: "Engg. Works", plain: "What he builds", c: "var(--b-blue)", t: "#fff", bg: "#1747a6", wall: "#9fb3c9",
+    going: "Engineering Works? Very near only.", here: "His workshop. Meter's waiting.", mq: "ENGG WORKS" },
+  { id: "darshini", sign: "Darshini", plain: "What he's into", c: "var(--b-green)", t: "#ffe9a8", bg: "#0b5d3b", wall: "#e3a0a6",
+    going: "Darshini. Good choice, saar.", here: "Today's specials. I'll wait.", mq: "DARSHINI" },
+  { id: "std", sign: "STD Booth", plain: "Say hi", c: "var(--b-yellow)", t: "var(--b-red)", bg: "#ffd400", wall: "#8fc2ab",
+    going: "STD booth? Very rare these days.", here: "Booth is open. Fare is one hello.", mq: "STD ISD PCO" },
+];
+
+/* ---------- boards ---------- */
+const stage = $("#stage");
+const boardHTML = {
+  store: () => `
+    <p class="prop">Prop. ${esc(DAKSH.name)}</p>
+    <h2 id="h-store">Wannabe Polymath General Stores</h2>
+    <p>Daksh lives in ${esc(DAKSH.city)} and studies ${esc(DAKSH.study)}. Online he's ${esc(DAKSH.github)}, which says most of it.</p>
+    <p>${txt(DAKSH.about)}</p>
+    <h3>Dealers in</h3>
+    <ul class="chips">${DAKSH.dealersIn.map(d => `<li>${txt(d)}</li>`).join("")}</ul>`,
+  works: () => `
+    <h2 id="h-works">Daksh Engineering Works</h2>
+    <p class="tag">All types of backend fitting and repairing done here. Apps also.</p>
+    <ul class="works">${DAKSH.builds.map(b => `<li><b>${b.url ? `<a href="${esc(b.url)}" ${ext}>${esc(b.name)}</a>` : esc(b.name)}</b><span>${esc(b.what)}</span></li>`).join("")}</ul>
+    <p class="foot"><a href="https://github.com/${esc(DAKSH.github)}" ${ext}>See the workshop on GitHub</a>
+      <span>Bill book (résumé): ${isFill(DAKSH.resume) ? txt(DAKSH.resume) : `<a href="${esc(DAKSH.resume)}" ${ext}>open</a>`}</span></p>`,
+  darshini: () => `
+    <h2 id="h-darshini">Today's Specials</h2>
+    <p class="tag">What Daksh is into lately. The menu changes often.</p>
+    <dl class="menu">${DAKSH.specials.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${txt(v)}</dd></div>`).join("")}</dl>
+    <p class="foot"><span>Self service. Ask him about any of it.</span> <button class="askbtn" type="button" data-go="3">Go to STD booth</button></p>`,
+  std: () => `
+    <h2 id="h-std">STD ISD PCO</h2>
+    <p class="tag">Calls, messages and hellos. Fare so far is ₹<span class="live-fare">87.50</span>, payable in one hello.</p>
+    <div class="stdwrap"><ul class="lines">
+      <li><span class="kind">Local call</span><a href="mailto:${esc(DAKSH.email)}">${esc(DAKSH.email)}</a><button class="copy" type="button">Copy</button></li>
+      <li><span class="kind">STD</span><a href="https://x.com/${esc(DAKSH.x)}" ${ext}>@${esc(DAKSH.x)} on X</a></li>
+      <li><span class="kind">ISD</span><a href="https://github.com/${esc(DAKSH.github)}" ${ext}>${esc(DAKSH.github)} on GitHub</a></li>
+    </ul><div class="stdqr" aria-hidden="true"><span class="qrbig"></span><p>Scan to write to him</p></div></div>`,
+};
+const boards = STOPS.map(s => {
+  const el = document.createElement("article");
+  el.className = `board b-${s.id}`;
+  el.id = `b-${s.id}`;
+  el.tabIndex = -1;
+  el.setAttribute("aria-labelledby", `h-${s.id}`);
+  el.innerHTML = boardHTML[s.id]();
+  el.inert = true;
+  stage.appendChild(el);
+  return el;
+});
+stage.addEventListener("click", e => {
+  const b = e.target.closest("[data-go]");
+  if (b) go(+b.dataset.go, e.detail === 0);
+  const c = e.target.closest(".copy");
+  if (c) navigator.clipboard?.writeText(DAKSH.email).then(() => { c.textContent = "Copied"; setTimeout(() => (c.textContent = "Copy"), 1800); }, () => {});
+});
+
+/* ---------- driver's stop buttons ---------- */
+const stopBtns = STOPS.map((s, i) => {
+  const li = document.createElement("li");
+  li.innerHTML = `<button class="stop" type="button" style="--c:${s.c};--t:${s.t}"><b>${s.sign}</b><span>${s.plain}</span></button>`;
+  $("#stops").appendChild(li);
+  const b = li.firstChild;
+  b.addEventListener("click", e => go(i, e.detail === 0));
+  return b;
+});
+const lineEl = $("#line");
+let lineTimer;
+function say(t, ms) {
+  clearTimeout(lineTimer);
+  const prev = lineEl.dataset.base;
+  lineEl.textContent = t;
+  if (ms) lineTimer = setTimeout(() => { lineEl.textContent = prev; }, ms);
+  else lineEl.dataset.base = t;
+}
+say(lineEl.textContent);
+
+/* ---------- QR codes (mailto) ---------- */
+function makeQR() {
+  if (!window.qrcode) return;
+  const q = qrcode(0, "M");
+  q.addData(`mailto:${DAKSH.email}?subject=Hi%20Daksh`);
+  q.make();
+  const svg = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  $("#qrcode").innerHTML = svg;
+  document.querySelectorAll(".qrbig").forEach(n => (n.innerHTML = svg));
+}
+window.qrcode ? makeQR() : addEventListener("load", makeQR);
+$("#qr").addEventListener("click", e => go(3, e.detail === 0));
+
+/* ---------- seven-segment meter ---------- */
+const SEG = { a: [10, 2, "h"], b: [17, 9.5, "v"], c: [17, 24.5, "v"], d: [10, 32, "h"], e: [3, 24.5, "v"], f: [3, 9.5, "v"], g: [10, 17, "h"] };
+const DIG = { 0: "abcdef", 1: "bc", 2: "abdeg", 3: "abcdg", 4: "bcfg", 5: "acdfg", 6: "acdefg", 7: "abc", 8: "abcdefg", 9: "abcdfg", "-": "g", " ": "" };
+const bar = ([x, y, o]) => {
+  const L = 11, T = 1.9;
+  return o === "h"
+    ? `${x - L / 2},${y} ${x - L / 2 + T},${y - T} ${x + L / 2 - T},${y - T} ${x + L / 2},${y} ${x + L / 2 - T},${y + T} ${x - L / 2 + T},${y + T}`
+    : `${x},${y - L / 2} ${x + T},${y - L / 2 + T} ${x + T},${y + L / 2 - T} ${x},${y + L / 2} ${x - T},${y + L / 2 - T} ${x - T},${y - L / 2 + T}`;
+};
+function seven(str) {
+  const cells = [];
+  for (const ch of str) ch === "." && cells.length ? (cells[cells.length - 1].dp = true) : cells.push({ ch, dp: false });
+  let s = `<svg viewBox="-2 0 ${cells.length * 22 + 2} 34">`;
+  cells.forEach((c, i) => {
+    const on = DIG[c.ch] ?? "";
+    s += `<g transform="translate(${i * 22} 0) skewX(-7)">`;
+    for (const k in SEG) s += `<polygon points="${bar(SEG[k])}" class="${on.includes(k) ? "on" : "off"}"/>`;
+    s += `<circle cx="20.6" cy="32" r="1.7" class="${c.dp ? "on" : "off"}"/></g>`;
+  });
+  return s + "</svg>";
+}
+const meter = { fare: 87.5, km: 6.4, shown: "" };
+function drawMeter() {
+  const f = (Math.floor(meter.fare * 2) / 2).toFixed(2).padStart(6, "0");
+  const k = meter.km.toFixed(1).padStart(4, "0");
+  const key = f + k;
+  if (key === meter.shown) return;
+  meter.shown = key;
+  $("#fare").innerHTML = seven(f);
+  $("#km").innerHTML = seven(k);
+  document.querySelectorAll(".live-fare").forEach(n => (n.textContent = (+f).toFixed(2)));
+}
+function setMarquee(next) {
+  const t = `DAKSH JAIN / WANNABE POLYMATH / ${next ? "NEXT: " + next : "WHERE TO?"} / `;
+  $("#mq").textContent = t + t;
+}
+setMarquee();
+drawMeter();
+
+/* ---------- cab geometry: one SVG, regenerated for the viewport ---------- */
+const cab = $("#cab");
+let G = {};
+function layout() {
+  const W = innerWidth, H = innerHeight, m = W < 720, short = !m && H < 560;
+  document.body.classList.toggle("short", short);
+  const c = m ? 66 : clamp(H * .115, short ? 44 : 70, 112);
+  const sag = m ? 16 : 34;
+  const xL = m ? 6 : clamp(W * .09, 64, 170), xR = W - xL;
+  const yB = Math.round(H * (m ? .66 : short ? .76 : .7));
+  const hr = m ? 30 : clamp(H * .058, 38, 60);
+  const dx = W * .5, headCY = yB + hr * .45, yH = headCY + hr * 2.75;
+  const rw = m ? 92 : clamp(W * .1, 120, 170), rh = Math.round(rw * .3);
+  const rx = m ? W - rw - 14 : xR - rw - 34, ry = m ? c - 6 : c - 10;
+  const fx = m ? 10 : xL + 36, fr = m ? W - 10 : rx - 24;
+  const fy = m ? ry + rh + 12 : Math.round(c + sag * (1 - 2 * fx / W) ** 2 + 30);
+  let fb = yB - hr * .6 - (m ? 8 : 14);
+  // controls
+  let mw, mx, my, qw, qx, qy, hs, hx, hy, ux, uw;
+  if (m) {
+    mw = 150; mx = 10; my = yB + 10; qw = 70; qx = W - qw - 12; qy = yB + 4; hs = 46; hx = qx - hs - 14; hy = yB + 22;
+  } else {
+    mw = clamp(W * .14, 172, 226); mx = dx + hr * 4.3; my = yB + 14;
+    qw = clamp(W * .075, 96, 126); hs = clamp(hr * .95, 44, 58); hx = dx + hr * 3.45 - hs / 2; hy = yH - hs / 2;
+    if (mx + mw + 24 + qw < W - 12) { qx = mx + mw + 24; qy = yB + 22; } else { qx = mx + 12; qy = my + 110; }
+    $("#qr").style.display = qy + qw * 1.45 > H ? "none" : "";
+    ux = Math.max(16, xL - 40); uw = Math.min(480, dx - hr * 2.7 - ux - 16);
+    $("#driver").style.width = uw + "px";
+    fb = Math.min(fb, H - 18 - $("#driver").offsetHeight - 10); // keep the board clear of the speech bubble
+    $("#driver").style.width = "";
+  }
+  const bw = Math.round(Math.min(660, fr - fx)), bh = Math.round(fb - fy);
+  G = { W, H, m, c, sag, xL, xR, yB, hr, dx, headCY, yH, fx, fy, fw: fr - fx, fh: fb - fy, bw, bh };
+  const v = { canopy: c, xL, yB, dx, hr, fx, fy, fw: fr - fx, fh: fb - fy, bw, bh, mx, my, mw, qx, qy, qw, hx, hy, hs, rx, ry, rw, rh, nx: rx + 14, ny: ry + rh - 6, ux: ux ?? 0, uw: uw ?? 0 };
+  const st = document.documentElement.style;
+  for (const k in v) st.setProperty("--" + k, Math.round(v[k]) + "px");
+  cab.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  cab.innerHTML = cabSVG(G);
+  $("#nimbu").style.display = m || short ? "none" : "";
+}
+function cabSVG(g) {
+  const { W, H, m, c, sag, xL, xR, yB, hr, dx, headCY, yH } = g;
+  const t = m ? 7 : 16, r = m ? 16 : 30, top = c - 30;
+  const qy = x => c + sag * (1 - 2 * x / W) ** 2; // canopy edge
+  let tas = "";
+  const cols = ["#d8261c", "#ffcd00", "#1f8a3a", "#f6f0e2"];
+  for (let x = 14, i = 0; x < W; x += m ? 17 : 22, i++) {
+    const y = qy(x) - 2, L = (m ? 9 : 13) + (i % 2) * 4, col = cols[i % 4];
+    tas += `<g class="tas" style="animation-delay:${-(i * .13) % 1.3}s"><path d="M${x} ${y}v${L}" stroke="#2a2030" stroke-width="1.4"/><circle cx="${x}" cy="${y + L + 3}" r="${m ? 3 : 4}" fill="${col}"/></g>`;
+  }
+  const head = `<ellipse cx="${dx}" cy="${headCY}" rx="${hr * .9}" ry="${hr * 1.04}" fill="#18100d"/>`;
+  const sh = `M${dx - hr * 2.7} ${H}L${dx - hr * 2.45} ${headCY + hr * 2.2}Q${dx - hr * 2.3} ${headCY + hr * 1.3} ${dx - hr * 1.05} ${headCY + hr * 1.12}H${dx + hr * 1.05}Q${dx + hr * 2.3} ${headCY + hr * 1.3} ${dx + hr * 2.45} ${headCY + hr * 2.2}L${dx + hr * 2.7} ${H}Z`;
+  return `
+  <defs>
+    <linearGradient id="gv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d1626"/><stop offset="1" stop-color="#0c0910"/></linearGradient>
+    <linearGradient id="gd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#231a2a"/><stop offset=".25" stop-color="#140f19"/><stop offset="1" stop-color="#09070c"/></linearGradient>
+    <linearGradient id="gk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4e4226"/><stop offset=".55" stop-color="#6e5d34"/><stop offset="1" stop-color="#3a311c"/></linearGradient>
+    <linearGradient id="gs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".48" stop-color="#fff" stop-opacity=".045"/><stop offset=".52" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <pattern id="st" width="40" height="9" patternUnits="userSpaceOnUse"><path d="M0 8.5h18" stroke="#2c2335" stroke-width="1" stroke-dasharray="3 3"/></pattern>
+  </defs>
+  <rect x="${xL}" y="${top}" width="${xR - xL}" height="${yB - top}" fill="url(#gs)"/>
+  ${m ? "" : `
+  <rect x="${W * .012}" y="0" width="9" height="${H}" fill="#0b080e"/>
+  <rect x="${W - W * .012 - 9}" y="0" width="9" height="${H}" fill="#0b080e"/>
+  <path d="M0 ${yB - 70}L${xL - t} ${yB - 92}" stroke="#7d7488" stroke-width="7" stroke-linecap="round"/>
+  <path d="M0 ${yB - 72}L${xL - t} ${yB - 94}" stroke="#c9c0d2" stroke-width="1.5" opacity=".5"/>
+  <rect x="${xR + t}" y="${c + sag - 8}" width="${W - xR - t}" height="26" rx="12" fill="#1a1320"/>
+  <path d="M${xR + t} ${c + sag + 5}H${W}" stroke="#2f2639" stroke-dasharray="4 4"/>`}
+  <path fill="#120d17" fill-rule="evenodd" d="M${xL - t} ${top}H${xR + t}V${yB + 8}H${xL - t}Z M${xL + r} ${top}H${xR - r}Q${xR} ${top} ${xR} ${top + r}V${yB - r}Q${xR} ${yB} ${xR - r} ${yB}H${xL + r}Q${xL} ${yB} ${xL} ${yB - r}V${top + r}Q${xL} ${top} ${xL + r} ${top}Z"/>
+  <path d="M${xL - t} ${top}V${yB + 6}M${xR + t} ${top}V${yB + 6}" stroke="#ffcd00" stroke-width="2.5" opacity=".75"/>
+  <path d="M${xL + r} ${yB + 3}H${xR - r}" stroke="#ffcd00" stroke-width="4" opacity=".85"/>
+  <path d="M0 ${yB + (m ? 14 : 44)}L${xL - t} ${yB + 8}H${xR + t}L${W} ${yB + (m ? 14 : 44)}V${H}H0Z" fill="url(#gd)"/>
+  <path d="M0 ${yB + (m ? 14 : 44)}L${xL - t} ${yB + 8}H${xR + t}L${W} ${yB + (m ? 14 : 44)}" stroke="#ff9a3c" stroke-opacity=".28" stroke-width="1.5" fill="none"/>
+  <path d="M${dx - hr * 3.6} ${yH - 6}Q${dx} ${yH + 12} ${dx + hr * 3.6} ${yH - 6}" stroke="#2c2832" stroke-width="${hr * .16}" fill="none" stroke-linecap="round"/>
+  <path d="M${dx - hr * 3.6} ${yH - 8}Q${dx} ${yH + 10} ${dx + hr * 3.6} ${yH - 8}" stroke="#9c94a6" stroke-width="1.5" fill="none" opacity=".45"/>
+  <path d="M${dx - hr * 3.85} ${yH - 9}h${hr * .62}M${dx + hr * 3.23} ${yH - 9}h${hr * .62}" stroke="#050405" stroke-width="${hr * .26}" stroke-linecap="round"/>
+  <path d="M${dx - hr * 2.95} ${headCY + hr * 2.3}L${dx - hr * 3.45} ${yH - 9}M${dx + hr * 2.95} ${headCY + hr * 2.3}L${dx + hr * 3.45} ${yH - 9}" stroke="#4a2e21" stroke-width="${hr * .34}" stroke-linecap="round"/>
+  <path d="M${dx - hr * 2.1} ${headCY + hr * 1.75}L${dx - hr * 2.95} ${headCY + hr * 2.3}M${dx + hr * 2.1} ${headCY + hr * 1.75}L${dx + hr * 2.95} ${headCY + hr * 2.3}" stroke="#55482a" stroke-width="${hr * .6}" stroke-linecap="round"/>
+  <circle cx="${dx - hr * 3.45}" cy="${yH - 9}" r="${hr * .23}" fill="#3a2418"/><circle cx="${dx + hr * 3.45}" cy="${yH - 9}" r="${hr * .23}" fill="#3a2418"/>
+  <path d="${sh}" fill="url(#gk)"/>
+  <path d="${sh}" fill="none" stroke="#ff9a3c" stroke-opacity=".35" stroke-width="2"/>
+  <path d="M${dx - hr * 2.25} ${headCY + hr * 1.9}Q${dx} ${headCY + hr * 2.25} ${dx + hr * 2.25} ${headCY + hr * 1.9}" stroke="#3a311c" stroke-width="1.5" fill="none"/>
+  <rect x="${dx - hr * .42}" y="${headCY + hr * .5}" width="${hr * .84}" height="${hr * .7}" fill="#4a2e21"/>
+  <path d="M${dx - hr * 1.1} ${headCY + hr * 1.14}Q${dx} ${headCY + hr * .95} ${dx + hr * 1.1} ${headCY + hr * 1.14}" stroke="#7d6a3d" stroke-width="${hr * .2}" fill="none"/>
+  <ellipse cx="${dx - hr * .9}" cy="${headCY + hr * .12}" rx="${hr * .17}" ry="${hr * .3}" fill="#573826"/>
+  <ellipse cx="${dx + hr * .9}" cy="${headCY + hr * .12}" rx="${hr * .17}" ry="${hr * .3}" fill="#573826"/>
+  ${head}
+  <path d="M${dx - hr * .5} ${headCY - hr * .7}q${hr * .5} -${hr * .2} ${hr * 1} 0M${dx - hr * .6} ${headCY - hr * .2}q${hr * .6} -${hr * .25} ${hr * 1.2} 0" stroke="#2e211b" stroke-width="2" fill="none"/>
+  <path d="M${dx + hr * .55} ${headCY - hr * .8}Q${dx + hr * .98} ${headCY - hr * .2} ${dx + hr * .82} ${headCY + hr * .55}" stroke="#ff9a3c" stroke-opacity=".45" stroke-width="2.5" fill="none"/>
+  <path d="M0 0H${W}V${c + sag}Q${W / 2} ${c - sag} 0 ${c + sag}Z" fill="url(#gv)"/>
+  <path d="M0 0H${W}V${c + sag}Q${W / 2} ${c - sag} 0 ${c + sag}Z" fill="url(#st)"/>
+  <path d="M0 ${c + sag - 2}Q${W / 2} ${c - sag - 2} ${W} ${c + sag - 2}" stroke="#ffcd00" stroke-width="3" fill="none" opacity=".8"/>
+  ${tas}`;
+}
+
+/* ---------- mirror eyes, horn, audio ---------- */
+const mirror = $("#mirror");
+const eyes = [...mirror.querySelectorAll(".eye i")];
+function look(px, py) {
+  const r = mirror.getBoundingClientRect();
+  const ax = clamp((px - (r.left + r.width / 2)) / 400, -1, 1), ay = clamp((py - (r.top + r.height / 2)) / 300, -1, 1);
+  eyes.forEach(e => { e.style.setProperty("--px", ax * 30 + "%"); e.style.setProperty("--py", ay * 22 + "%"); });
+}
+addEventListener("pointermove", e => look(e.clientX, e.clientY), { passive: true });
+(function blink() {
+  if (!reduced) { mirror.classList.add("blink"); setTimeout(() => mirror.classList.remove("blink"), 140); }
+  setTimeout(blink, 2200 + Math.random() * 4200);
+})();
+
+let AC, master, eng, soundOn = false, cityTimer;
+function ac() {
+  if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = .9; master.connect(AC.destination); }
+  if (AC.state === "suspended") AC.resume();
+  return AC;
+}
+function horn(gain = .11, pitch = 1) {
+  const a = ac(), t = a.currentTime;
+  const bp = a.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1150 * pitch; bp.Q.value = 1.3;
+  const g = a.createGain(); g.gain.value = 0;
+  bp.connect(g).connect(master);
+  [[0, .15], [.21, .44]].forEach(([s, e]) => {
+    g.gain.setValueAtTime(0, t + s); g.gain.linearRampToValueAtTime(gain, t + s + .012);
+    g.gain.setValueAtTime(gain, t + e - .03); g.gain.linearRampToValueAtTime(0, t + e);
+  });
+  [440, 556].forEach(f => { const o = a.createOscillator(); o.type = "square"; o.frequency.value = f * pitch; o.connect(bp); o.start(t); o.stop(t + .5); });
+}
+function engineOn() {
+  const a = ac();
+  if (!eng) {
+    const o = a.createOscillator(); o.type = "sawtooth"; o.frequency.value = 34;
+    const lp = a.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 280;
+    const am = a.createGain(); am.gain.value = .55;
+    const lfo = a.createOscillator(); lfo.type = "square"; lfo.frequency.value = 11;
+    const lg = a.createGain(); lg.gain.value = .45; lfo.connect(lg).connect(am.gain);
+    const g = a.createGain(); g.gain.value = 0;
+    o.connect(lp).connect(am).connect(g).connect(master);
+    const buf = a.createBuffer(1, a.sampleRate * 2, a.sampleRate), d = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < d.length; i++) { last = (last + .02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }
+    const n = a.createBufferSource(); n.buffer = buf; n.loop = true;
+    const ng = a.createGain(); ng.gain.value = .5; n.connect(ng).connect(g);
+    o.start(); lfo.start(); n.start();
+    eng = { o, lfo, g };
+  }
+  eng.g.gain.setTargetAtTime(.3, a.currentTime, .2);
+  clearInterval(cityTimer);
+  cityTimer = setInterval(() => Math.random() < .5 && horn(.018 + Math.random() * .02, .75 + Math.random() * .5), 2600);
+}
+document.addEventListener("visibilitychange", () => { if (AC) document.hidden ? AC.suspend() : soundOn && AC.resume(); });
+function engineOff() { if (eng) eng.g.gain.setTargetAtTime(0, AC.currentTime, .15); clearInterval(cityTimer); }
+$("#sound").addEventListener("click", e => {
+  soundOn = !soundOn;
+  e.currentTarget.setAttribute("aria-pressed", soundOn);
+  e.currentTarget.textContent = soundOn ? "Sound on" : "Sound off";
+  soundOn ? engineOn() : engineOff();
+});
+const HONK_LINES = ["Why honking? I'm the one driving.", "Pom pom! Okay okay.", "Horn OK please, saar.", "Everybody honks. Bangalore."];
+function honk() {
+  horn();
+  const h = $("#horn"); h.classList.add("press"); setTimeout(() => h.classList.remove("press"), 140);
+  mirror.classList.add("wide"); setTimeout(() => mirror.classList.remove("wide"), 900);
+  say(HONK_LINES[Math.floor(Math.random() * HONK_LINES.length)], 2400);
+  jolt = 1;
+}
+$("#horn").addEventListener("click", honk);
+
+/* ---------- ride state ---------- */
+let cur = -1, mode = "cruise", acted = false, jolt = 0, world = null, ready = false, pending = null;
+function markCurrent() { stopBtns.forEach((b, i) => b.setAttribute("aria-current", i === cur ? "true" : "false")); }
+function go(i, viaKey) {
+  acted = true;
+  if (!ready) { pending = [i, viaKey]; return; }
+  if (i === cur && mode === "stopped") { if (viaKey) boards[i].focus({ preventScroll: true }); return; }
+  const prev = cur;
+  cur = i; markCurrent();
+  say(STOPS[i].going);
+  setMarquee(STOPS[i].mq);
+  boards.forEach(b => (b.inert = true));
+  if (soundOn) horn(.06);
+  if (world) world.trip(i, prev, () => arrive(i, viaKey));
+  else {
+    boards.forEach((b, k) => b.classList.toggle("on", k === i));
+    arrive(i, viaKey);
+  }
+}
+function arrive(i, viaKey) {
+  mode = "stopped";
+  say(STOPS[i].here);
+  boards[i].inert = false;
+  $("#wait").classList.add("lit");
+  if (viaKey) boards[i].focus({ preventScroll: true });
+}
+addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (/^[1-4]$/.test(e.key)) { go(+e.key - 1, true); e.preventDefault(); }
+  else if (e.key === "h" || e.key === "H") honk();
+});
+setTimeout(() => {
+  if (acted || cur >= 0) return;
+  say("No answer? General Stores first.");
+  setTimeout(() => !acted && go(0, false), 1500);
+}, 9000);
+
+/* ---------- flat fallback (no WebGL / no CDN) ---------- */
+function flat() {
+  document.body.classList.add("flat");
+  const sky = $("#flatsky");
+  for (let i = 0; i < 18; i++) {
+    const d = document.createElement("i"), s = 6 + Math.random() * 18;
+    const a = Math.random() * Math.PI * 2;
+    d.style.cssText = `left:${50 + Math.cos(a) * 6}%;top:${60 + Math.sin(a) * 3}%;width:${s}px;height:${s}px;--tx:${Math.cos(a) * 60}vw;--ty:${Math.sin(a) * 40 - 10}vh;animation-delay:${-Math.random() * 7}s`;
+    sky.appendChild(d);
+  }
+}
+
+/* ---------- main loop (meter + world) ---------- */
+let last = performance.now(), lastAmp = "";
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  let moved = 0;
+  if (world) moved = world.update(dt, now);
+  else if (mode === "cruise" && !reduced) moved = 7 * dt;
+  meter.km += moved / 100;
+  meter.fare += moved * .045 + (mode === "stopped" ? dt * .08 : 0);
+  if (mode !== "stopped") $("#wait").classList.remove("lit");
+  const speed = moved / Math.max(dt, 1e-4);
+  const amp = (reduced ? 0 : 2 + Math.min(speed, 30) * .35 + jolt * 10).toFixed(0);
+  if (amp !== lastAmp) { lastAmp = amp; document.documentElement.style.setProperty("--amp", amp + "deg"); }
+  jolt = Math.max(0, jolt - dt * 2);
+  if (eng) { eng.o.frequency.setTargetAtTime(30 + speed * 1.4, AC.currentTime, .12); eng.lfo.frequency.setTargetAtTime(9 + speed * .45, AC.currentTime, .12); }
+  drawMeter();
+  requestAnimationFrame(frame);
+}
+
+layout();
+addEventListener("resize", () => { layout(); world?.resize(); });
+if (reduced) say("Signal is red. Where to, saar?");
+
+try { world = await build3D(); }
+catch (err) { console.warn("3D street unavailable, using the flat view:", err.message); flat(); }
+ready = true;
+if (pending) go(...pending);
+requestAnimationFrame(frame);
+
+/* =====================================================================
+   The street: three.js for the city, CSS3DRenderer for the boards so
+   their text stays real, crisp, selectable HTML.
+   ===================================================================== */
+async function build3D() {
+  const probe = document.createElement("canvas");
+  if (!(probe.getContext("webgl2") || probe.getContext("webgl"))) throw new Error("WebGL not available");
+  const THREE = await import("three");
+  const { CSS3DRenderer, CSS3DObject } = await import("three/addons/renderers/CSS3DRenderer.js");
+  await Promise.race([Promise.all([document.fonts.load('60px "Rozha One"'), document.fonts.load('700 20px Mukta')]), new Promise(r => setTimeout(r, 2500))]);
+
+  const SCALE = .01, CY = 1.45, LANE = -2, RW = 5.5, FX = 6.6, BL = 48, PITCH = .11;
+  const mob = innerWidth < 720;
+  const NB = mob ? 3 : 4;
+  const R = Math.random;
+  const pick = a => a[Math.floor(R() * a.length)];
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, mob ? 1.5 : 1.75));
+  renderer.setSize(innerWidth, innerHeight);
+  $("#world").appendChild(renderer.domElement);
+  const css = new CSS3DRenderer();
+  css.setSize(innerWidth, innerHeight);
+  css.domElement.style.position = "absolute";
+  css.domElement.style.inset = "0";
+  css.domElement.style.pointerEvents = "none";
+  stage.appendChild(css.domElement);
+
+  const scene = new THREE.Scene(), cssScene = new THREE.Scene();
+  const HAZE = new THREE.Color("#b0583f");
+  scene.fog = new THREE.Fog(HAZE, 16, mob ? 95 : 120);
+  const cam = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, .1, 500);
+  const fovFor = () => (innerWidth / innerHeight < .8 ? 66 : 50);
+  cam.fov = fovFor(); cam.updateProjectionMatrix();
+
+  /* canvases → textures */
+  const cnv = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); return c; };
+  const tex = (c, srgb = true) => { const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+  const glowTex = tex(cnv(64, 64, (x, w) => { const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(.25, "rgba(255,255,255,.55)"); g.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = g; x.fillRect(0, 0, w, w); }));
+
+  // sky dome
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(300, 32, 16), new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false, fog: false,
+    uniforms: { hor: { value: HAZE }, mid: { value: new THREE.Color("#5a2a52") }, top: { value: new THREE.Color("#140d26") }, glow: { value: new THREE.Color("#ff8a3a") } },
+    vertexShader: "varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }",
+    fragmentShader: `uniform vec3 hor, mid, top, glow; varying vec3 vD;
+      void main(){ float y = vD.y; vec3 c = mix(hor, mid, smoothstep(.0,.16,y)); c = mix(c, top, smoothstep(.16,.55,y));
+      float s = pow(max(0., dot(normalize(vec3(vD.x,0.,vD.z)), vec3(0.,0.,-1.))), 4.) * (1. - smoothstep(-.02,.22,y));
+      c += glow * s * .55; gl_FragColor = vec4(c,1.);
+      #include <colorspace_fragment>
+      }`,
+  }));
+  scene.add(sky);
+
+  scene.add(new THREE.HemisphereLight("#8f74b8", "#4a2a1c", 1.25));
+  const sun = new THREE.DirectionalLight("#ffa060", .9); sun.position.set(.7, .5, -1); scene.add(sun);
+
+  // road, curbs, ground
+  const roadTex = tex(cnv(256, 256, (x, w, h) => {
+    x.fillStyle = "#2b2427"; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 1400; i++) { x.fillStyle = `rgba(${R() < .5 ? "255,255,255" : "0,0,0"},${R() * .07})`; x.fillRect(R() * w, R() * h, 2, 2); }
+    for (let i = 0; i < 3; i++) { x.fillStyle = "rgba(0,0,0,.18)"; x.beginPath(); x.ellipse(R() * w, R() * h, 10 + R() * 26, 6 + R() * 14, R() * 3, 0, 7); x.fill(); }
+    x.fillStyle = "rgba(230,222,200,.55)"; x.fillRect(w / 2 - 2, 0, 4, h * .45); x.fillRect(w / 2 - 2, h * .5, 4, h * .45);
+    x.fillStyle = "rgba(255,200,40,.25)"; x.fillRect(6, 0, 3, h); x.fillRect(w - 9, 0, 3, h);
+  }));
+  roadTex.wrapS = roadTex.wrapT = THREE.RepeatWrapping;
+  const ROADLEN = 320;
+  roadTex.repeat.set(1, ROADLEN / 16);
+  const road = new THREE.Mesh(new THREE.PlaneGeometry(RW * 2, ROADLEN), new THREE.MeshLambertMaterial({ map: roadTex }));
+  road.rotation.x = -Math.PI / 2; scene.add(road);
+  const curbTex = tex(cnv(64, 16, (x) => { x.fillStyle = "#e8c21a"; x.fillRect(0, 0, 32, 16); x.fillStyle = "#151215"; x.fillRect(32, 0, 32, 16); }));
+  curbTex.wrapS = curbTex.wrapT = THREE.RepeatWrapping; curbTex.repeat.set(ROADLEN / 2, 1);
+  const curbs = [-1, 1].map(s => {
+    const walk = new THREE.Mesh(new THREE.BoxGeometry(FX - RW, .16, ROADLEN), new THREE.MeshLambertMaterial({ color: "#4a3e44" }));
+    walk.position.set(s * (RW + (FX - RW) / 2), .08, 0);
+    const curb = new THREE.Mesh(new THREE.PlaneGeometry(ROADLEN, .17), new THREE.MeshLambertMaterial({ map: curbTex }));
+    curb.rotation.y = -s * Math.PI / 2; curb.position.set(s * RW - s * .002, .085, 0);
+    const g = new THREE.Group(); g.add(walk, curb); scene.add(g); return g;
+  });
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(700, 700), new THREE.MeshLambertMaterial({ color: "#211820" }));
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -.02; scene.add(ground);
+
+  // shared facade textures: walls white with dark windows (map) + lit windows (emissive)
+  const winCells = Array.from({ length: 64 }, () => R());
+  const winMap = tex(cnv(512, 512, (x, w) => {
+    x.fillStyle = "#fff"; x.fillRect(0, 0, w, w);
+    for (let i = 0; i < 64; i++) { const cx = (i % 8) * 64, cy = Math.floor(i / 8) * 64; x.fillStyle = "rgba(0,0,0,.08)"; x.fillRect(cx, cy + 58, 64, 6); x.fillStyle = "#26202c"; x.fillRect(cx + 14, cy + 14, 36, 34); x.fillStyle = "rgba(0,0,0,.25)"; x.fillRect(cx + 10, cy + 48, 44, 4); }
+  }));
+  const winEmi = tex(cnv(512, 512, (x, w) => {
+    x.fillStyle = "#000"; x.fillRect(0, 0, w, w);
+    const lit = ["#ffd98a", "#ffc070", "#cfe6ff", "#ffb07a", "#fff1c4"];
+    for (let i = 0; i < 64; i++) { if (winCells[i] > .38) continue; const cx = (i % 8) * 64, cy = Math.floor(i / 8) * 64; x.fillStyle = pick(lit); x.fillRect(cx + 14, cy + 14, 36, 34); x.fillStyle = "rgba(0,0,0,.35)"; x.fillRect(cx + 30, cy + 14, 3, 34); }
+  }));
+  [winMap, winEmi].forEach(t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; });
+
+  // shopfront + sign textures (ambient shops; generic names, a couple of winks)
+  const SHOPS = [["Xerox & Lamination", "Spiral binding also"], ["New Modern Bakery", "Puffs, cakes, biscuits"], ["Cool Drinks", "Juice and chats"], ["Mobile Repairs", "All brands"], ["Fancy Store", "Bangles, gifts, toys"], ["Tailors", "Alterations done"], ["Medicals", "Open till 11 pm"], ["Tea & Coffee", "Filter coffee"], ["Puncture Shop", "Two and three wheelers"], ["Opticals", "Eyes tested free"], ["Book Depot", "Old and new"], ["Kirana Stores", "Wholesale and retail"], ["Flower Stall", "Fresh daily"], ["Sweets & Savouries", "Pure ghee"], ["Curiosity Traders", "Questions bought and sold"], ["Side Quest Enterprises", "Open all hours"]];
+  const SIGNC = [["#c81f17", "#ffd400"], ["#1747a6", "#fff"], ["#0b5d3b", "#ffe9a8"], ["#ffd400", "#c81f17"], ["#f1ece0", "#1747a6"], ["#d63384", "#fff"], ["#222", "#ffcd00"], ["#ff7a00", "#1a1206"], ["#6c1f9a", "#ffe9a8"]];
+  function shopCanvas(w, [name, sub], [bg, fg]) {
+    return cnv(w, 256, (x) => {
+      x.fillStyle = "#2a2025"; x.fillRect(0, 0, w, 256);
+      // sign (tube light on top)
+      x.fillStyle = bg; x.fillRect(4, 10, w - 8, 84);
+      const gr = x.createLinearGradient(0, 10, 0, 94); gr.addColorStop(0, "rgba(255,255,255,.28)"); gr.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = gr; x.fillRect(4, 10, w - 8, 84);
+      x.fillStyle = "#fffbe6"; x.fillRect(w * .15, 2, w * .7, 5);
+      x.fillStyle = fg; x.textAlign = "center"; x.textBaseline = "alphabetic";
+      x.font = '58px "Rozha One"';
+      const tw = x.measureText(name.toUpperCase()).width, sx = Math.min(1, (w - 34) / tw);
+      x.save(); x.translate(w / 2, 66); x.scale(sx, 1); x.fillText(name.toUpperCase(), 0, 0); x.restore();
+      x.font = "700 17px Mukta"; x.fillText(sub, w / 2, 87);
+      // shop openings
+      const n = w > 400 ? 2 : 1, ow = (w - 20 - (n - 1) * 12) / n;
+      for (let i = 0; i < n; i++) {
+        const ox = 10 + i * (ow + 12);
+        if (R() < .72) {
+          const g2 = x.createLinearGradient(0, 112, 0, 256); g2.addColorStop(0, "#fff0c8"); g2.addColorStop(1, "#c98a3c"); x.fillStyle = g2; x.fillRect(ox, 112, ow, 144);
+          for (let s = 0; s < 4; s++) { x.fillStyle = "rgba(90,50,20,.55)"; x.fillRect(ox + 6, 128 + s * 30, ow - 12, 4); for (let k = 0; k < ow / 14; k++) { x.fillStyle = pick(["#d8261c", "#1f8a3a", "#1747a6", "#ffcd00", "#fff", "#7a3fa0"]); x.fillRect(ox + 8 + k * 14, 112 + s * 30 + R() * 6, 9, 14); } }
+          if (R() < .6) { x.fillStyle = "rgba(30,15,10,.85)"; const px = ox + ow * (.2 + R() * .6); x.beginPath(); x.arc(px, 182, 11, 0, 7); x.fill(); x.fillRect(px - 15, 194, 30, 62); }
+        } else {
+          x.fillStyle = "#6c6870"; x.fillRect(ox, 112, ow, 144);
+          for (let s = 0; s < 144; s += 7) { x.fillStyle = "rgba(0,0,0,.28)"; x.fillRect(ox, 112 + s, ow, 2); }
+        }
+      }
+    });
+  }
+  const pool = { n: [], w: [] };
+  SHOPS.forEach((s, i) => { pool.n.push(tex(shopCanvas(384, s, SIGNC[i % SIGNC.length]))); pool.w.push(tex(shopCanvas(512, SHOPS[(i + 7) % SHOPS.length], SIGNC[(i + 4) % SIGNC.length]))); });
+
+  const WALLS = ["#d8738a", "#7cc0a8", "#e0a942", "#79a9d1", "#b6c95a", "#a68ad1", "#e8875a", "#d9d0bf", "#5fb3b3", "#c95a5a", "#f0c9a0"];
+  const boxGeo = new THREE.BoxGeometry(1, 1, 1); boxGeo.translate(0, .5, 0);
+  const planeGeo = new THREE.PlaneGeometry(1, 1); planeGeo.translate(0, .5, 0);
+  const tankGeo = new THREE.CylinderGeometry(.62, .62, 1.15, 12);
+  const darkMat = new THREE.MeshLambertMaterial({ color: "#100d13" });
+  const leafMat = new THREE.MeshLambertMaterial({ color: "#2b4a2f", flatShading: true });
+  const blobGeo = new THREE.IcosahedronGeometry(1, 1);
+  const poleGeo = new THREE.CylinderGeometry(.09, .12, 7, 6); poleGeo.translate(0, 3.5, 0);
+  const trunkGeo = new THREE.CylinderGeometry(.2, .32, 5, 6); trunkGeo.translate(0, 2.5, 0);
+  const lampMat = new THREE.PointsMaterial({ size: 3.4, map: glowTex, color: "#ffab5c", transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  const poolTex = tex(cnv(128, 128, (x) => { const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, "rgba(255,170,90,.75)"); g.addColorStop(1, "rgba(255,170,90,0)"); x.fillStyle = g; x.fillRect(0, 0, 128, 128); }));
+  const poolMat = new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .55 });
+  const poolGeo = new THREE.PlaneGeometry(1, 1); poolGeo.rotateX(-Math.PI / 2);
+  const wireMat = new THREE.LineBasicMaterial({ color: "#120c16" });
+  const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), S3 = new THREE.Vector3();
+  const POLES = [-4, -20, -36], SLOTS = [-12, -28, -44], TREES = [-1, -17, -33];
+
+  function setWin(mesh, w, h) {
+    mesh.material.map.repeat.set(w / (1.9 * 8), h / (3 * 8));
+    mesh.material.emissiveMap.repeat.set(w / (1.9 * 8), h / (3 * 8));
+  }
+  function makeBuilding(side, z1, w) {
+    const mat = new THREE.MeshLambertMaterial({ color: "#fff", map: winMap.clone(), emissive: "#fff", emissiveMap: winEmi.clone(), emissiveIntensity: .95 });
+    const body = new THREE.Mesh(boxGeo, mat);
+    const front = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ color: "#e2d6d2" }));
+    front.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+    return { body, front, side, z1, z2: z1 - w, w, h: 8 };
+  }
+  function makeBlock() {
+    const g = new THREE.Group();
+    g.userData.b = [];
+    for (const side of [-1, 1]) {
+      let z = 0;
+      while (z > -BL + .5) {
+        const w = Math.min(5 + R() * 4.2, z + BL);
+        if (w < 2.5) break;
+        const b = makeBuilding(side, z, w);
+        g.add(b.body, b.front); g.userData.b.push(b);
+        z -= w;
+      }
+    }
+    // roof tanks
+    g.userData.tanks = new THREE.InstancedMesh(tankGeo, darkMat, g.userData.b.length); g.userData.tanks.frustumCulled = false; g.add(g.userData.tanks);
+    // trees
+    g.userData.blobs = new THREE.InstancedMesh(blobGeo, leafMat, TREES.length * 2 * 4); g.userData.blobs.frustumCulled = false;
+    g.userData.trunks = new THREE.InstancedMesh(trunkGeo, darkMat, TREES.length * 2); g.userData.trunks.frustumCulled = false;
+    g.add(g.userData.blobs, g.userData.trunks);
+    // poles, lamps, pools, wires (static per block)
+    const poles = new THREE.InstancedMesh(poleGeo, darkMat, POLES.length * 2), arms = new THREE.InstancedMesh(boxGeo, darkMat, POLES.length * 2);
+    const lampPos = [], pools = new THREE.InstancedMesh(poolGeo, poolMat, POLES.length * 2);
+    let k = 0;
+    for (const s of [-1, 1]) for (const pz of POLES) {
+      M4.compose(V.set(s * 5.75, 0, pz), Q.identity(), S3.set(1, 1, 1)); poles.setMatrixAt(k, M4);
+      M4.compose(V.set(s * 5.0, 6.7, pz), Q.identity(), S3.set(1.6, .08, .08)); arms.setMatrixAt(k, M4);
+      M4.compose(V.set(s * 3.9, .03, pz), Q.identity(), S3.set(7, 1, 7)); pools.setMatrixAt(k, M4);
+      lampPos.push(s * 4.3, 6.55, pz); k++;
+    }
+    const lamps = new THREE.Points(new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute(lampPos, 3)), lampMat);
+    const wp = [];
+    const span = (ax, ay, az, bx, by, bz, sag) => { const N = 10; for (let i = 0; i < N; i++) { const t0 = i / N, t1 = (i + 1) / N; const f = t => [lerp(ax, bx, t), lerp(ay, by, t) - Math.sin(Math.PI * t) * sag, lerp(az, bz, t)]; wp.push(...f(t0), ...f(t1)); } };
+    for (const s of [-1, 1]) for (const pz of POLES) for (let w = 0; w < 4; w++) span(s * (5.75 + (R() - .5) * .3), 5.4 + R() * 1.4, pz, s * (5.75 + (R() - .5) * .3), 5.4 + R() * 1.4, pz - 16, .3 + R() * .7);
+    for (let i = 0; i < 3; i++) { const pz = pick(POLES); span(-5.75, 6 + R() * .8, pz, 5.75, 6 + R() * .8, pz - (R() < .5 ? 0 : 16), .8 + R() * .8); }
+    const wires = new THREE.LineSegments(new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute(wp, 3)), wireMat);
+    poles.frustumCulled = arms.frustumCulled = pools.frustumCulled = false;
+    g.add(poles, arms, lamps, pools, wires);
+    scene.add(g);
+    return g;
+  }
+  function dressBlock(g) {
+    const bs = g.userData.b;
+    bs.forEach((b, i) => {
+      b.h = R() < .18 ? 4.6 + R() * 1.5 : 6 + R() * 9;
+      b.body.visible = b.front.visible = true;
+      b.body.material.color.set(pick(WALLS));
+      b.body.scale.set(9, b.h, b.w - .05);
+      b.body.position.set(b.side * (FX + 4.5), 0, b.z1 - b.w / 2);
+      setWin(b.body, b.w, b.h);
+      b.front.material.map = pick(b.w < 6.6 ? pool.n : pool.w); b.front.material.needsUpdate = true;
+      b.front.scale.set(b.w - .35, Math.min(4.2, b.h - .3), 1);
+      b.front.position.set(b.side * (FX - .02), 0, b.z1 - b.w / 2);
+      M4.compose(V.set(b.side * (FX + 2 + R() * 4), b.h + .57, b.z1 - b.w * (.3 + R() * .4)), Q.identity(), S3.setScalar(R() < .7 ? 1 : 0));
+      g.userData.tanks.setMatrixAt(i, M4);
+    });
+    g.userData.tanks.instanceMatrix.needsUpdate = true;
+    let bi = 0, ti = 0;
+    for (const s of [-1, 1]) for (const tz of TREES) {
+      const on = R() < .6, z = tz + (R() - .5) * 1.6;
+      M4.compose(V.set(s * 5.95, 0, z), Q.identity(), S3.setScalar(on ? .8 + R() * .4 : 0)); g.userData.trunks.setMatrixAt(ti++, M4);
+      for (let k = 0; k < 4; k++) {
+        const r = on ? 1.3 + R() * 1.1 : 0;
+        M4.compose(V.set(s * (5.6 - R() * 2.2), 5.2 + R() * 2, z + (R() - .5) * 3.4), Q.setFromEuler(new THREE.Euler(R() * 3, R() * 3, 0)), S3.set(r, r * .75, r));
+        g.userData.blobs.setMatrixAt(bi++, M4);
+      }
+    }
+    g.userData.blobs.instanceMatrix.needsUpdate = g.userData.trunks.instanceMatrix.needsUpdate = true;
+  }
+  const blocks = [];
+  for (let i = 0; i < NB; i++) { const g = makeBlock(); g.position.z = 20 - i * BL; dressBlock(g); blocks.push(g); }
+
+  /* traffic */
+  const tailMat = new THREE.PointsMaterial({ size: .9, map: glowTex, color: "#ff2a1a", transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  const headMat = new THREE.PointsMaterial({ size: 2.2, map: glowTex, color: "#fff0c0", transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  const lam = c => new THREE.MeshLambertMaterial({ color: c });
+  function vehicle(type, oncoming) {
+    const g = new THREE.Group(); let len, lights;
+    const add = (w, h, d, y, mat, z = 0) => { const m = new THREE.Mesh(boxGeo, mat); m.scale.set(w, h, d); m.position.set(0, y, z); g.add(m); };
+    if (type === "car") { len = 3.8; add(1.7, .7, 3.8, .25, lam(pick(["#2b2b33", "#5a1f22", "#d9d4ca", "#1f3d5a", "#8a8a90"]))); add(1.45, .55, 2, .95, lam("#141218"), .2); lights = [[-.62, .7], [.62, .7]]; }
+    else if (type === "auto") { len = 2.5; add(1.3, .8, 2.4, .2, lam("#e8b800")); add(1.32, .75, 2.2, 1.0, lam("#121014")); add(1.3, .2, 2.4, .05, lam("#1f6a32")); lights = [[0, .5]]; }
+    else if (type === "bike") { len = 1.8; add(.22, .6, 1.8, .25, lam("#1b1b20")); add(.5, .75, .4, .95, lam(pick(["#7a2a2a", "#2a4a7a", "#d8d0c0"]))); add(.32, .32, .32, 1.72, lam("#111")); lights = [[0, .75]]; }
+    else { len = 10; add(2.5, 2.6, 10, .35, lam(pick(["#2f6d5a", "#3a5f9a", "#a33a2a"]))); const win = new THREE.Mesh(boxGeo, new THREE.MeshBasicMaterial({ color: "#ffe6a8" })); win.scale.set(2.52, .7, 8.8); win.position.y = 1.9; g.add(win); add(2.1, .8, .06, 1.8, win.material, 5.0); lights = [[-1, .7], [1, .7]]; }
+    const lp = [];
+    lights.forEach(([lx, ly]) => lp.push(lx, ly, oncoming ? -len / 2 - .05 : len / 2 + .05));
+    g.add(new THREE.Points(new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute(lp, 3)), oncoming ? headMat : tailMat));
+    scene.add(g);
+    return { g, type, oncoming, v: 0 };
+  }
+  const traffic = [];
+  const types = ["car", "auto", "bike", "auto", "car", "bike", "bus", "auto"];
+  for (let i = 0; i < (mob ? 5 : 8); i++) traffic.push(vehicle(types[i], false));
+  for (let i = 0; i < (mob ? 3 : 5); i++) traffic.push(vehicle(pick(["car", "car", "auto", "bike", "bus"]), true));
+  function respawn(t, z0, spread) {
+    if (t.oncoming) { t.g.position.set(2.2 + R() * 2, 0, z0 - R() * spread); t.v = 8 + R() * 7; t.g.rotation.y = Math.PI; }
+    else {
+      const slow = t.type === "bike" || t.type === "auto";
+      t.g.position.set(slow && R() < .7 ? -4.25 + R() * .3 : .55 + R() * .35, 0, z0 - R() * spread);
+      t.v = slow ? 4 + R() * 4 : 6 + R() * 5;
+    }
+  }
+
+  /* destinations: one building + board per stop */
+  const dest = STOPS.map((s, i) => {
+    const g = new THREE.Group(); g.visible = false;
+    const mat = new THREE.MeshLambertMaterial({ color: s.wall, map: winMap.clone(), emissive: "#fff", emissiveMap: winEmi.clone(), emissiveIntensity: .9 });
+    const body = new THREE.Mesh(boxGeo, mat);
+    const shop = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ map: pool.w[(i * 3) % pool.w.length], color: "#d8cdc8" })); shop.rotation.y = Math.PI / 2;
+    const backing = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: s.bg }));
+    const tube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "#fffbea" }));
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: "#fff1cf", transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .9 }));
+    const lpool = new THREE.Mesh(poolGeo, new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: "#fff2d8", opacity: .8 }));
+    g.add(body, shop, backing, tube, glow, lpool);
+    scene.add(g);
+    const obj = new CSS3DObject(boards[i]);
+    obj.element.style.userSelect = "text";
+    obj.scale.setScalar(SCALE);
+    obj.visible = false;
+    cssScene.add(obj);
+    return { g, body, shop, backing, tube, glow, lpool, obj, el: boards[i], S: null };
+  });
+  const camEl = css.domElement.firstChild.firstChild; // mount boards now so they can be measured
+  boards.forEach(b => { camEl.appendChild(b); b.style.display = "none"; });
+
+  const probeCam = new THREE.Object3D();
+  function stopPose(i, zs) {
+    const H = innerHeight, d = SCALE * H / (2 * Math.tan(cam.fov * Math.PI / 360));
+    const S = { x: LANE - 1.1, z: zs, yaw: Math.PI / 2, pitch: PITCH };
+    probeCam.position.set(S.x, CY, S.z); probeCam.rotation.set(S.pitch, S.yaw, 0, "YXZ"); probeCam.updateMatrixWorld();
+    const e = probeCam.matrixWorld.elements;
+    const right = new THREE.Vector3(e[0], e[1], e[2]), up = new THREE.Vector3(e[4], e[5], e[6]), back = new THREE.Vector3(e[8], e[9], e[10]);
+    const el = dest[i].el; el.style.display = "";
+    const bw = el.offsetWidth, bh = el.offsetHeight;
+    const cx = G.fx + G.fw / 2, cy = G.fy + G.fh / 2;
+    const B = probeCam.position.clone().addScaledVector(back, -d).addScaledVector(right, (cx - G.W / 2) * SCALE).addScaledVector(up, -(cy - G.H / 2) * SCALE);
+    return Object.assign(S, { B, q: probeCam.quaternion.clone(), up, back, bw, bh });
+  }
+  function placeStop(i, S) {
+    const D = dest[i], bw = S.bw * SCALE, bh = S.bh * SCALE;
+    const face = S.B.x - .55, wid = Math.max(bw + 4, 17), hei = Math.max(S.B.y + bh / 2 + 3.2, 9), dep = 9;
+    D.body.scale.set(dep, hei, wid); D.body.position.set(face - dep / 2, 0, S.z); setWin(D.body, wid, hei);
+    D.shop.scale.set(Math.min(wid - 1, 7), 3.4, 1); D.shop.position.set(face + .03, 0, S.z);
+    D.backing.position.copy(S.B).addScaledVector(S.back, -.03); D.backing.quaternion.copy(S.q); D.backing.scale.set(bw + .1, bh + .1, 1);
+    D.tube.position.copy(S.B).addScaledVector(S.up, bh / 2 + .13); D.tube.quaternion.copy(S.q); D.tube.scale.set(bw * .82, .07, .07);
+    D.glow.position.copy(D.tube.position).addScaledVector(S.back, .2); D.glow.scale.set(bw * 1.5, 1.5, 1);
+    D.lpool.position.set(face + 2.6, .04, S.z); D.lpool.scale.set(6, 1, Math.max(bw, 6));
+    D.obj.position.copy(S.B); D.obj.quaternion.copy(S.q);
+    D.g.visible = true; D.S = S;
+    // open a gap in the left row so the shop sits at the end of a short lane
+    const half = wid / 2 + .6;
+    for (const b of blocks) for (const x of b.userData.b) {
+      if (x.side > 0) continue;
+      const zA = b.position.z + x.z1, zB = b.position.z + x.z2;
+      if (zA > S.z - half && zB < S.z + half) x.body.visible = x.front.visible = false;
+    }
+  }
+  function slotNear(zt) {
+    let best = null;
+    for (const b of blocks) for (const s of SLOTS) { const z = b.position.z + s; if (best === null || Math.abs(z - zt) < Math.abs(best - zt)) best = z; }
+    return best;
+  }
+
+  /* pose + trip */
+  const pose = { x: LANE, z: 0, yaw: 0, pitch: 0 };
+  let trip = null, stopAt = -1, lookY = 0, lookP = 0, tLookY = 0, tLookP = 0;
+  traffic.forEach(t => respawn(t, -10, 110));
+  addEventListener("pointermove", e => { if (e.pointerType !== "mouse") return; tLookY = (e.clientX / innerWidth - .5) * -.07; tLookP = (e.clientY / innerHeight - .5) * -.035; }, { passive: true });
+
+  function startTrip(i, prev, done) {
+    const A = { ...pose };
+    const leaving = Math.abs(A.yaw) > .02;
+    const zs = slotNear(A.z - (leaving ? 64 : 72));
+    const S = stopPose(i, zs);
+    placeStop(i, S);
+    dest.forEach((D, k) => { if (k !== i && k !== prev) D.obj.visible = false; });
+    dest[i].obj.visible = true; dest[i].el.style.opacity = 0;
+    trip = { i, prev, A, S, t0: performance.now(), dur: reduced ? 0 : (leaving ? 4100 : 3600), leaving, v0: mode === "cruise" && !reduced ? 7 : 0, done };
+    mode = "trip";
+    stopAt = -1;
+  }
+  function stepTrip(now) {
+    const T = trip, { A, S } = T;
+    const u = T.dur ? clamp((now - T.t0) / T.dur, 0, 1) : 1;
+    const out = T.leaving ? sstep(0, .2, u) : 1;
+    const z0 = T.leaving ? .12 : 0, zu = clamp((u - z0) / (.84 - z0), 0, 1);
+    const Dz = Math.abs(S.z - A.z), m0 = T.dur ? T.v0 * (T.dur / 1000) * (.84 - z0) / Dz : 0;
+    const h = (zu ** 3 - 2 * zu ** 2 + zu) * m0 + (-2 * zu ** 3 + 3 * zu ** 2);
+    const inn = sstep(.6, 1, u);
+    pose.z = A.z + (S.z - A.z) * h;
+    pose.yaw = A.yaw * (1 - out) + S.yaw * inn;
+    pose.x = lerp(lerp(A.x, LANE, out), S.x, inn);
+    pose.pitch = lerp(A.pitch * (1 - out), S.pitch, sstep(.74, 1, u));
+    dest[T.i].el.style.opacity = sstep(.93, 1, u).toFixed(3);
+    if (T.prev >= 0 && T.prev !== T.i) { const p = dest[T.prev]; p.el.style.opacity = (1 - sstep(0, .1, u)).toFixed(3); if (u > .1) p.obj.visible = false; }
+    if (u >= 1) {
+      trip = null; stopAt = T.i;
+      if (!reduced) { const D = dest[T.i]; D.flick = now; D.el.classList.remove("flick"); void D.el.offsetWidth; D.el.classList.add("flick"); }
+      T.done();
+    }
+  }
+
+  const prevPos = new THREE.Vector3(pose.x, 0, pose.z);
+  function update(dt, now) {
+    if (trip) stepTrip(now);
+    else if (mode === "cruise" && !reduced) pose.z -= 7 * dt;
+    const moved = Math.hypot(pose.x - prevPos.x, pose.z - prevPos.z);
+    prevPos.set(pose.x, 0, pose.z);
+    const sp = moved / Math.max(dt, 1e-4), sn = reduced ? 0 : clamp(sp / 7, 0, 2.6);
+    const t = now / 1000;
+    lookY = lerp(lookY, reduced ? 0 : tLookY * (stopAt >= 0 ? .2 : 1), .05);
+    lookP = lerp(lookP, reduced ? 0 : tLookP * (stopAt >= 0 ? .2 : 1), .05);
+    const bob = (Math.sin(t * 13) * .014 + Math.sin(t * 7.3) * .01 + (R() - .5) * .006) * sn + (reduced ? 0 : jolt * Math.sin(t * 40) * .02);
+    cam.position.set(pose.x, CY + bob, pose.z);
+    cam.rotation.set(pose.pitch + lookP, pose.yaw + lookY, (reduced ? 0 : Math.sin(t * 5.1) * .004 * sn), "YXZ");
+
+    // world follows
+    sky.position.copy(cam.position);
+    road.position.z = cam.position.z - 120; roadTex.offset.y = (-road.position.z / 16) % 1;
+    curbs.forEach(c => (c.position.z = road.position.z)); curbTex.offset.x = (road.position.z / 2) % 1;
+    ground.position.set(cam.position.x, -.02, cam.position.z);
+    for (const b of blocks) if (b.position.z - BL > cam.position.z + 14) { b.position.z -= NB * BL; dressBlock(b); }
+    dest.forEach(D => {
+      if (D.g.visible && D.S.z > cam.position.z + 40) D.g.visible = false;
+      // shop tube light stutters on when you pull up
+      const k = D.flick ? (now - D.flick) / 650 : 2;
+      const on = k > .45 || (k > .08 && k < .16) || (k > .28 && k < .33);
+      if (k > 1) D.flick = 0;
+      D.tube.material.color.set(on ? "#fffbea" : "#3a3836");
+      D.glow.material.opacity = on ? .9 : .05;
+    });
+
+    // traffic
+    const zs = trip ? trip.S.z : stopAt >= 0 ? dest[stopAt].S.z : null;
+    for (const v of traffic) {
+      if (!reduced) v.g.position.z += (v.oncoming ? 1 : -1) * v.v * dt;
+      const z = v.g.position.z;
+      if (v.oncoming ? z > cam.position.z + 10 : z > cam.position.z + 8) respawn(v, cam.position.z - 70, 70);
+      else if (!v.oncoming && z < cam.position.z - 150) respawn(v, cam.position.z - 50, 60);
+      if (zs !== null && !v.oncoming && v.g.position.x < -3 && Math.abs(v.g.position.z - zs) < 22) { v.g.position.z = zs - 30 - R() * 50; }
+    }
+    renderer.render(scene, cam);
+    css.render(cssScene, cam);
+    return moved;
+  }
+  function resize() {
+    renderer.setSize(innerWidth, innerHeight); css.setSize(innerWidth, innerHeight);
+    cam.aspect = innerWidth / innerHeight; cam.fov = fovFor(); cam.updateProjectionMatrix();
+    if (stopAt >= 0) {
+      const S = stopPose(stopAt, dest[stopAt].S.z);
+      placeStop(stopAt, S);
+      Object.assign(pose, { x: S.x, z: S.z, yaw: S.yaw, pitch: S.pitch });
+      prevPos.set(pose.x, 0, pose.z);
+    }
+  }
+  update(0, performance.now());
+  $("#world").classList.add("live");
+  return { update, resize, trip: (i, prev, done) => startTrip(i, prev, done) };
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daksh Jain</title>
+<meta name="description" content="Daksh Jain wants to be a polymath. Play a very short game of snake and eat the words that make him up.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%23D7301F%27/%3E%3Crect x=%274%27 y=%274%27 width=%2724%27 height=%2724%27/%3E%3Ccircle cx=%2719%27 cy=%2712%27 r=%272.6%27 fill=%27%23FFF8EA%27/%3E%3Ccircle cx=%2719%27 cy=%2720%27 r=%272.6%27 fill=%27%23FFF8EA%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Karla:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cell:36px;
+  --cream:#FBF1DF;
+  --mid:#E8907F;
+  --red:#D7301F;
+  --tile:#FFF8EA;
+  --ink:#000;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  min-height:100dvh;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  color:var(--ink);
+  font-family:Karla,"Helvetica Neue",Arial,sans-serif;
+  font-size:16px;line-height:1.4;
+  background-color:var(--cream);
+  background-image:conic-gradient(from 0deg at 50% 50%,var(--mid) 25%,var(--red) 25% 50%,var(--mid) 50% 75%,var(--cream) 75%);
+  background-size:calc(var(--cell)*2) calc(var(--cell)*2);
+  background-position:0 0;
+}
+a{color:inherit;text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1.5px}
+a:hover{text-decoration-thickness:3px}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.btn{
+  font:700 14px/1 Karla,sans-serif;
+  background:var(--ink);color:var(--tile);
+  border:2px solid var(--ink);
+  padding:9px 12px;cursor:pointer;
+}
+.btn.ghost{background:var(--tile);color:var(--ink)}
+.btn.ghost[aria-pressed="true"]{background:var(--ink);color:var(--tile)}
+.btn:hover{background:var(--red);border-color:var(--red);color:var(--tile)}
+.card{
+  background:var(--tile);
+  border:2px solid var(--ink);
+  box-shadow:5px 5px 0 var(--ink);
+}
+
+/* tag in the corner */
+.top{flex:none;padding:16px;display:flex;align-items:flex-start}
+.tag{padding:14px 16px 16px;max-width:470px}
+.tag h1{font:400 26px/1.1 "Alfa Slab One",Georgia,serif;margin:0 0 6px;letter-spacing:.01em}
+.tag p{margin:0 0 8px}
+.tag .hint{font-size:14px;color:#3a1a14}
+.tag .hint.coarse{display:none}
+.tag .links{display:flex;flex-wrap:wrap;gap:4px 16px;font-weight:500;margin-bottom:12px}
+@media (pointer:coarse){.tag .hint.fine{display:none}.tag .hint.coarse{display:block}}
+
+/* the table */
+.field{position:relative;flex:1;min-height:0}
+canvas{position:absolute;left:0;top:0;display:block;touch-action:none}
+.start{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  padding:10px 14px;font-weight:700;font-size:15px;white-space:nowrap;pointer-events:none;
+}
+.end{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(520px,calc(100% - 32px));padding:20px 22px 22px;
+}
+.end h2{font:400 clamp(24px,4vw,34px)/1.1 "Alfa Slab One",Georgia,serif;margin:0 0 10px}
+.end p{margin:0 0 12px}
+.end .row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+[hidden]{display:none !important}
+
+/* caption strip */
+.strip{
+  flex:none;display:flex;align-items:center;gap:14px;
+  min-height:60px;padding:10px 16px;
+  background:var(--tile);border-top:2px solid var(--ink);
+}
+.strip p{margin:0;flex:1;font-size:17px;min-width:0}
+.strip .count{font:400 15px "Alfa Slab One",Georgia,serif;white-space:nowrap}
+.strip .btn{padding:7px 10px;font-size:13px}
+
+/* the plain version */
+.sheet{
+  position:fixed;top:0;right:0;bottom:0;z-index:20;
+  width:min(560px,100%);
+  background:var(--tile);border-left:3px solid var(--ink);
+  overflow:auto;padding:28px 28px 40px;
+  transform:translateX(0);transition:transform .25s ease;
+}
+.sheet[hidden]{display:block !important;transform:translateX(102%);visibility:hidden}
+.sheet h2{font:400 30px/1.1 "Alfa Slab One",Georgia,serif;margin:0 0 14px;padding-right:90px}
+.sheet h3{font:400 18px/1.2 "Alfa Slab One",Georgia,serif;margin:26px 0 8px}
+.sheet p{max-width:58ch}
+.sheet ul{margin:0;padding:0;list-style:none}
+.sheet li{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:baseline;padding:7px 0;border-bottom:1.5px solid rgba(0,0,0,.18)}
+.sheet li .w{font:400 15px "Alfa Slab One",Georgia,serif;background:var(--cream);border:1.5px solid var(--ink);padding:4px 7px;white-space:nowrap}
+.sheet li.fill .w{background:transparent;border-style:dashed;color:#7a2a1c}
+.sheet .work li{display:block}
+.sheet .close{position:absolute;top:18px;right:18px}
+.sheet .links a{display:inline-block;margin:0 16px 8px 0;font-weight:500}
+
+@media (max-width:640px){
+  .top{padding:10px}
+  .tag{padding:12px 13px 13px;max-width:none}
+  .tag h1{font-size:22px}
+  .tag p{font-size:14px;margin-bottom:6px}
+  .tag .links{gap:2px 12px;font-size:14px;margin-bottom:10px}
+  .strip{min-height:54px;padding:8px 12px;gap:10px}
+  .strip p{font-size:14px}
+  .sheet{padding:22px 18px 40px}
+  .sheet h2{font-size:26px}
+}
+@media (prefers-reduced-motion:reduce){
+  .sheet{transition:none}
+}
+</style>
+</head>
+<body>
+
+<header class="top" id="top">
+  <div class="tag card">
+    <h1>Daksh Jain</h1>
+    <p>Wants to be a polymath. In practice he'll eat anything: a city, a degree, a language, a desktop pet. You're the snake. Eat the words.</p>
+    <p class="hint fine">Arrow keys steer. Edges wrap. Don't bite yourself.</p>
+    <p class="hint coarse">Swipe to steer. Edges wrap. Don't bite yourself.</p>
+    <p class="links" id="links"></p>
+    <button class="btn" id="plainBtn" type="button">Skip the game, read it plain</button>
+  </div>
+</header>
+
+<main class="field" id="field">
+  <canvas id="c" aria-label="A snake game on a red gingham tablecloth. Steer the snake into words about Daksh; each word joins the snake's body as letter tiles. The same content is available in the plain version."></canvas>
+  <div class="start card" id="start" aria-live="polite"></div>
+  <div class="end card" id="end" role="status" tabindex="-1" hidden></div>
+</main>
+
+<footer class="strip">
+  <p id="caption" aria-live="polite">Nothing eaten yet. He's hungry.</p>
+  <span class="count" id="count"></span>
+  <button class="btn ghost" id="soundBtn" type="button" aria-pressed="false">Sound off</button>
+</footer>
+
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+  <button class="btn close" id="closeBtn" type="button">Close</button>
+  <h2 id="sheetTitle">The plain version</h2>
+  <p id="plainIntro"></p>
+  <h3>On the table</h3>
+  <ul id="plainItems"></ul>
+  <h3>Work, briefly</h3>
+  <ul class="work" id="plainWork"></ul>
+  <h3>Say hi</h3>
+  <p class="links" id="plainLinks"></p>
+</aside>
+
+<script>
+// ---------- Everything about Daksh lives here. Replace "[fill: ...]" values; the game adapts. ----------
+const DATA = {
+  name: "Daksh Jain",
+  email: "dakshjainn2004@gmail.com",
+  github: "https://github.com/wannabeepolymath",
+  x: "https://x.com/dakshhjainn",
+  intro: "Daksh Jain lives in Bangalore and is studying computer science at BITS Pilani, bachelor's and master's, finishing in 2027. His GitHub handle is wannabeepolymath, which is the whole personality in one word.",
+  // Words on the table. tech:true words are served in the bottom-right corner.
+  items: [
+    { word: "Bangalore",        note: "Where he lives." },
+    { word: "BITS Pilani",      note: "Computer science, bachelor's and master's, until 2027." },
+    { word: "[fill: a hobby]",  note: "[fill: one line on what he does when he isn't building]" },
+    { word: "[fill: a place]",  note: "[fill: somewhere that matters to him, and why]" },
+    { word: "[fill: music]",    note: "[fill: what he plays too loud]" },
+    { word: "Rust",    tech: true, note: "Wrote a WebSocket multiplexer in it." },
+    { word: "Go",      tech: true, note: "Built a Redis clone from scratch." },
+    { word: "Parla",   tech: true, note: "A macOS app that types what you say." },
+    { word: "Burmese", tech: true, note: "A desktop pet that keeps you company while you work." },
+  ],
+  work: [
+    "Emergent: backends for AI agents.",
+    "A WebSocket multiplexer in Rust.",
+    "A Redis clone in Go.",
+    "Parla, a macOS voice-dictation app.",
+    "Burmese, a desktop companion pet.",
+    "A Solana game that lives inside Telegram.",
+  ],
+};
+// ------------------------------------------------------------------------------------------------------
+
+const $ = id => document.getElementById(id);
+const topEl = $('top'), field = $('field'), canvas = $('c'), ctx = canvas.getContext('2d');
+const startEl = $('start'), endEl = $('end'), caption = $('caption'), countEl = $('count');
+const sheet = $('sheet'), plainBtn = $('plainBtn'), closeBtn = $('closeBtn'), soundBtn = $('soundBtn');
+const coarse = matchMedia('(pointer:coarse)').matches;
+const INK = '#000', TILE = '#FFF8EA';
+
+const items = DATA.items.map(it => {
+  const fill = /^\[fill:/i.test(it.word);
+  const text = fill ? it.word.replace(/^\[fill:\s*/i, '').replace(/\]$/, '') : it.word;
+  return { ...it, fill, text, letters: [...text], eaten: false, cells: [] };
+});
+
+// ---------- static content ----------
+const linkHtml = `<a href="mailto:${DATA.email}">${DATA.email}</a> <a href="${DATA.github}">GitHub</a> <a href="${DATA.x}">X</a>`;
+$('links').innerHTML = linkHtml;
+$('plainLinks').innerHTML = linkHtml;
+$('plainIntro').textContent = DATA.intro;
+$('plainItems').innerHTML = items.map(it =>
+  `<li class="${it.fill ? 'fill' : ''}"><span class="w">${it.text}</span><span>${it.note}</span></li>`).join('');
+$('plainWork').innerHTML = DATA.work.map(w => `<li>${w}</li>`).join('');
+startEl.textContent = coarse ? 'Swipe anywhere to start eating' : 'Press an arrow key to start eating';
+
+// ---------- grid ----------
+let cell = 36, cols = 40, rows = 20, dpr = 1, lastW = 0;
+function layout() {
+  const W = innerWidth, H = innerHeight;
+  cell = Math.min(40, Math.max(26, W / 40));
+  cols = Math.round(W / cell);
+  cell = W / cols;
+  document.documentElement.style.setProperty('--cell', cell + 'px');
+  // header height snaps to the cell so the canvas grid lines up with the cloth
+  topEl.style.height = '';
+  topEl.style.height = Math.ceil(topEl.scrollHeight / cell) * cell + 'px';
+  const avail = H - topEl.offsetHeight - document.querySelector('.strip').offsetHeight;
+  rows = Math.max(8, Math.floor(avail / cell));
+  dpr = Math.min(2, devicePixelRatio || 1);
+  canvas.style.width = W + 'px';
+  canvas.style.height = rows * cell + 'px';
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(rows * cell * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  lastW = W;
+}
+
+// ---------- placing the food ----------
+const key = (x, y) => x + ',' + y;
+const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+let startX, startY;
+function place() {
+  const occ = new Set();
+  const mark = (x, y) => { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) occ.add(key(x + dx, y + dy)); };
+  startX = Math.floor(cols * 0.3); startY = Math.floor(rows / 2);
+  for (let x = startX - 2; x <= Math.ceil(cols * 0.72); x++) mark(x, startY);
+  const cx = Math.floor(cols * 0.55), cy = Math.floor(rows * 0.55);
+  for (const it of items) {
+    it.cells = [];
+    const n = Math.min(it.letters.length, cols); // ponytail: a word longer than the table just gets clipped
+    for (let t = 0; t < 500 && !it.cells.length; t++) {
+      let x, y;
+      if (it.tech) { x = rand(Math.min(cx, cols - n), cols - n); y = rand(cy, rows - 1); }
+      else {
+        x = rand(0, cols - n); y = rand(0, rows - 1);
+        if (t < 350 && x + n > cx && y >= cy) continue; // keep the corner for tech
+      }
+      let ok = true;
+      for (let i = 0; i < n; i++) if (occ.has(key(x + i, y))) { ok = false; break; }
+      if (!ok) continue;
+      for (let i = 0; i < n; i++) { it.cells.push([x + i, y]); mark(x + i, y); }
+    }
+  }
+}
+
+// ---------- the snake ----------
+let body, letters, pending, growth, dir, queue, started, ended, timer, eatenOrder;
+const SPEED = coarse ? 165 : 140;
+
+function reset() {
+  clearInterval(timer); timer = null;
+  place();
+  body = [[startX, startY]]; letters = []; pending = []; growth = 0;
+  dir = [1, 0]; queue = []; started = false; ended = false; eatenOrder = [];
+  items.forEach(it => it.eaten = false);
+  startEl.hidden = false; endEl.hidden = true;
+  caption.textContent = "Nothing eaten yet. He's hungry.";
+  countEl.textContent = `0 of ${items.length}`;
+  draw();
+}
+function steer(d) {
+  if (ended || !sheet.hidden) return;
+  if (!started) { started = true; startEl.hidden = true; timer = setInterval(tick, SPEED); }
+  if (queue.length < 2) queue.push(d);
+}
+function tick() {
+  while (queue.length) {
+    const d = queue.shift();
+    if (d[0] === -dir[0] && d[1] === -dir[1]) continue; // no U-turns into yourself
+    dir = d; break;
+  }
+  const nx = (body[0][0] + dir[0] + cols) % cols, ny = (body[0][1] + dir[1] + rows) % rows;
+  const limit = growth > 0 ? body.length : body.length - 1;
+  for (let i = 0; i < limit; i++) if (body[i][0] === nx && body[i][1] === ny) return finish(eatenOrder.length === items.length);
+  body.unshift([nx, ny]);
+  if (growth > 0) { growth--; letters.push(pending.shift()); } else body.pop();
+
+  const it = items.find(it => !it.eaten && it.cells.some(c => c[0] === nx && c[1] === ny));
+  if (it) {
+    it.eaten = true; eatenOrder.push(it);
+    growth += it.letters.length;
+    pending.push(...it.letters.map(ch => ({ ch, ghost: it.fill })));
+    caption.textContent = it.fill ? `${it.text}: ${it.note}` : `${it.text}. ${it.note}`;
+    countEl.textContent = `${eatenOrder.length} of ${items.length}`;
+    blip();
+  }
+  draw();
+  if (eatenOrder.length === items.length && growth === 0) finish(true);
+}
+function finish(won) {
+  ended = true; clearInterval(timer); timer = null;
+  const ate = eatenOrder.map(i => i.text).join(', ');
+  endEl.innerHTML = won
+    ? `<h2>That's him, roughly.</h2>
+       <p>${body.length - 1} tiles long: ${ate}.</p>
+       <p>He bites off a lot. If you want a piece of it, <a href="mailto:${DATA.email}">say hi</a>.</p>
+       <div class="row"><button class="btn" type="button" data-act="plain">Read the plain version</button><button class="btn ghost" type="button" data-act="again">Play again</button></div>`
+    : `<h2>He bit his own tail.</h2>
+       <p>Too many interests in one place. It happens to wannabe polymaths.</p>
+       <p>${eatenOrder.length ? `You got ${eatenOrder.length} of ${items.length}: ${ate}.` : `You got nothing. He's still hungry.`}</p>
+       <div class="row"><button class="btn" type="button" data-act="again">Play again</button><button class="btn ghost" type="button" data-act="plain">Read the plain version</button></div>`;
+  endEl.hidden = false;
+  endEl.focus({ preventScroll: true });
+}
+endEl.addEventListener('click', e => {
+  const act = e.target.dataset.act;
+  if (act === 'again') reset();
+  if (act === 'plain') openSheet();
+});
+
+// ---------- drawing ----------
+function tile(x, y, ch, ghost) {
+  const pad = cell * 0.09, s = cell - pad * 2, px = x * cell + pad, py = y * cell + pad;
+  if (ghost) {
+    ctx.fillStyle = 'rgba(255,248,234,.55)'; ctx.fillRect(px, py, s, s);
+    ctx.setLineDash([Math.max(3, cell * 0.11), Math.max(2, cell * 0.07)]);
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.5;
+    ctx.strokeRect(px + .75, py + .75, s - 1.5, s - 1.5);
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(0,0,0,.62)';
+  } else {
+    ctx.fillStyle = INK; ctx.fillRect(px + 2.5, py + 2.5, s, s);
+    ctx.fillStyle = TILE; ctx.fillRect(px, py, s, s);
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.strokeRect(px + .75, py + .75, s - 1.5, s - 1.5);
+    ctx.fillStyle = INK;
+  }
+  if (ch && ch !== ' ') {
+    ctx.font = `${cell * 0.56}px "Alfa Slab One", Georgia, serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(ch, x * cell + cell / 2, y * cell + cell / 2 + cell * 0.04);
+  }
+}
+function head(x, y) {
+  const pad = cell * 0.09, s = cell - pad * 2, px = x * cell + pad, py = y * cell + pad;
+  ctx.fillStyle = INK; ctx.fillRect(px + 2.5, py + 2.5, s, s); ctx.fillRect(px, py, s, s);
+  // eyes look where he's going
+  const [dx, dy] = dir, cxp = x * cell + cell / 2, cyp = y * cell + cell / 2, r = cell * 0.075, f = cell * 0.2, o = cell * 0.17;
+  const ex = cxp + dx * f, ey = cyp + dy * f;
+  ctx.fillStyle = TILE;
+  for (const sgn of [-1, 1]) {
+    ctx.beginPath();
+    ctx.arc(ex + (dy ? sgn * o : 0), ey + (dx ? sgn * o : 0), r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+function draw() {
+  ctx.clearRect(0, 0, cols * cell, rows * cell);
+  for (const it of items) if (!it.eaten) it.cells.forEach(([x, y], i) => tile(x, y, it.letters[i], it.fill));
+  for (let i = body.length - 1; i >= 1; i--) { const L = letters[i - 1]; tile(body[i][0], body[i][1], L && L.ch, L && L.ghost); }
+  head(body[0][0], body[0][1]);
+}
+
+// ---------- input ----------
+const KEYS = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
+addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !sheet.hidden) return closeSheet();
+  const d = KEYS[e.key] || KEYS[e.key.toLowerCase()];
+  if (!d || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (!sheet.hidden) return;
+  e.preventDefault();
+  steer(d);
+});
+let tx = 0, ty = 0;
+canvas.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+canvas.addEventListener('touchmove', e => {
+  const dx = e.touches[0].clientX - tx, dy = e.touches[0].clientY - ty;
+  if (Math.hypot(dx, dy) < 22) return;
+  steer(Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)]);
+  tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+}, { passive: true });
+
+// ---------- plain version ----------
+let lastFocus = null, pausedByUs = false;
+function openSheet() {
+  lastFocus = document.activeElement;
+  sheet.hidden = false;
+  if (timer) { clearInterval(timer); timer = null; pausedByUs = true; }
+  closeBtn.focus();
+}
+function closeSheet() {
+  sheet.hidden = true;
+  if (pausedByUs && !ended) { timer = setInterval(tick, SPEED); }
+  pausedByUs = false;
+  (lastFocus && lastFocus.focus) ? lastFocus.focus() : null;
+}
+plainBtn.addEventListener('click', openSheet);
+closeBtn.addEventListener('click', closeSheet);
+
+// ---------- sound (off until asked) ----------
+let soundOn = false, actx;
+soundBtn.addEventListener('click', () => {
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? 'Sound on' : 'Sound off';
+  soundBtn.setAttribute('aria-pressed', String(soundOn));
+  if (soundOn) blip();
+});
+function blip() {
+  if (!soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'square';
+    o.frequency.setValueAtTime(440, t); o.frequency.exponentialRampToValueAtTime(880, t + .09);
+    g.gain.setValueAtTime(.05, t); g.gain.exponentialRampToValueAtTime(.0005, t + .14);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + .15);
+  } catch (e) { /* no audio, no problem */ }
+}
+
+// ---------- lifecycle ----------
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && timer) { clearInterval(timer); timer = null; pausedByUs = true; }
+  else if (!document.hidden && pausedByUs && !ended && sheet.hidden) { timer = setInterval(tick, SPEED); pausedByUs = false; }
+});
+addEventListener('resize', () => {
+  // ponytail: ignore the mobile address-bar wobble mid-game; a real width change re-lays the table
+  if (innerWidth === lastW && started && !ended) return;
+  layout(); reset();
+});
+(document.fonts ? document.fonts.load('20px "Alfa Slab One"').catch(() => {}) : Promise.resolve())
+  .then(() => { layout(); reset(); });
+</script>
+</body>
+</html>
