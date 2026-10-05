@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daksh Jain</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20x%3D%274%27%20y%3D%271%27%20width%3D%2724%27%20height%3D%2730%27%20rx%3D%273%27%20fill%3D%27%23fbf9f4%27%2F%3E%3Cpath%20d%3D%27M16%204C13%208%208%2010%208%2015a5%205%200%200%200%207%204l-2%205h6l-2-5a5%205%200%200%200%207-4c0-5-5-7-8-11%27%20fill%3D%27%23161311%27%2F%3E%3Ctext%20x%3D%2716%27%20y%3D%2717%27%20text-anchor%3D%27middle%27%20font-family%3D%27Georgia%27%20font-size%3D%277%27%20fill%3D%27%23f3ead7%27%3EDJ%3C%2Ftext%3E%3C%2Fsvg%3E">
+<meta name="description" content="Daksh Jain, jack of all trades. His website is a deck of cards: pick one.">
+<link rel="canonical" href="https://polymathdaksh.com/">
+<meta name="theme-color" content="#5e1527">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Daksh Jain">
+<meta property="og:description" content="Daksh Jain, jack of all trades. His website is a deck of cards: pick one.">
+<meta property="og:url" content="https://polymathdaksh.com/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Daksh Jain">
+<meta name="twitter:description" content="Daksh Jain, jack of all trades. His website is a deck of cards: pick one.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Reenie+Beanie&family=Rozha+One&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1 class="sr">Daksh Jain</h1>
+
+<p class="hint" id="hint">Tap a card to read it. Drag across the felt to deal them your own way.</p>
+
+<div class="held" id="held" hidden>
+  <button class="step" id="prev" type="button" aria-label="Previous card">&lsaquo;</button>
+  <button id="putback" type="button">Put it back</button>
+  <span class="links" id="links" hidden></span>
+  <button class="step" id="next" type="button" aria-label="Next card">&rsaquo;</button>
+</div>
+
+<ul class="index" id="index" aria-label="Pick up a card"></ul>
+
+<div class="bar">
+  <nav class="tools" aria-label="The deck">
+    <button id="turn" type="button">Turn over</button>
+    <button id="shuffle" type="button">Shuffle</button>
+    <button id="sound" type="button" aria-pressed="true">Sound</button>
+  </nav>
+  <div class="maker" id="maker"></div>
+</div>
+
+<div class="sr" id="live" aria-live="polite"></div>
+<section class="flat" id="flat" aria-label="Every card, laid flat"></section>
+
+<noscript>
+  <section style="position: relative; z-index: 6; margin: 24px; padding: 24px; background: #1d0509; color: #f3ead7">
+    <p>Daksh Jain lives in Bangalore and goes by wannabeepolymath online. He studies computer science at BITS Pilani and builds systems and small apps. This website is his deck of trades: pick a card.</p>
+    <p><a style="color: #dcb96e" href="mailto:dakshjainn2004@gmail.com">dakshjainn2004@gmail.com</a> · <a style="color: #dcb96e" href="https://github.com/wannabeepolymath">GitHub</a> · <a style="color: #dcb96e" href="https://x.com/dakshhjainn">X</a></p>
+  </section>
+</noscript>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
