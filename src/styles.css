@@ -1,124 +1,210 @@
-  :root {
-    --felt: #5e1527;
-    --felt-deep: #1d0509;
-    --gold: #dcb96e;
-    --stock: #fbf9f4;
-    --ink: #161311;
-    --red: #c4182c;
-    --ultra: #1f3d9c;
-    --ivory: #f3ead7;
-    --graphite: #5d5a55;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; }
-  body {
-    background: radial-gradient(120% 90% at 45% 40%, var(--felt) 0%, #3a0c17 55%, var(--felt-deep) 100%);
-    color: var(--ivory);
-    font: 400 16px/1.5 Literata, Georgia, serif;
-    overflow: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
-  canvas.table { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
-  .sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
-  button, a { -webkit-tap-highlight-color: transparent; }
-  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+/*
+  Wannabee: a meadow at bee scale, in honey light.
+  Tokens: honey sky, plum ink, violet seed packet, paper tags. One verb everywhere: land.
+*/
+:root {
+  --honey: #F5A01A;   /* sky, pollen */
+  --glow: #FFE3A1;    /* low sun haze, headings on dark */
+  --paper: #FFF2CC;   /* plant tags, text on dark */
+  --plum: #2A0E33;    /* ink */
+  --violet: #6A2BD6;  /* the seed packet */
+  --display: "Shrikhand", Georgia, serif;
+  --body: "Schibsted Grotesk", system-ui, sans-serif;
+  --gut: clamp(16px, 3vw, 44px);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  overflow: hidden;
+  background: linear-gradient(#E9840C, #FFB43A 45%, #FFDC92 68%, #56691A 68.2%);
+  color: var(--plum);
+  font: 400 1.0625rem/1.55 var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+/* film grain, generated */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 20; pointer-events: none; opacity: .2; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .05 0 0 0 0 .2 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--plum); outline-offset: 3px; }
+#meadow { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: manipulation; }
+#meadow.point { cursor: pointer; }
 
-  /* bottom bar: deck tools left, maker's address right */
-  .bar {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 3;
-    display: flex; justify-content: space-between; align-items: flex-end; gap: 16px;
-    padding: 0 24px max(20px, env(safe-area-inset-bottom));
-    pointer-events: none;
-  }
-  .bar > * { pointer-events: auto; }
-  .tools { display: flex; gap: 8px; }
-  .tools button, .held button {
-    font: 600 14px/1 Literata, Georgia, serif; letter-spacing: .01em;
-    color: var(--ink); background: var(--ivory);
-    border: 0; border-radius: 3px; padding: 11px 14px 12px; cursor: pointer;
-    box-shadow: 0 1px 0 rgba(0,0,0,.5), 0 8px 18px -6px rgba(0,0,0,.6);
-    transition: transform .12s ease, background-color .12s ease;
-  }
-  .tools button:hover, .held button:hover { background: #fff; transform: translateY(-1px); }
-  .tools button:active, .held button:active { transform: translateY(1px); }
-  .tools button[aria-pressed="false"] { background: transparent; color: var(--ivory); box-shadow: inset 0 0 0 1px rgba(243,234,215,.45); }
-  .maker { text-align: right; font-size: 15px; line-height: 1.45; text-shadow: 0 1px 8px rgba(0,0,0,.6); }
-  .maker .lead { font-style: italic; opacity: .82; }
-  .maker a { color: var(--gold); text-decoration-thickness: 1px; text-underline-offset: 3px; }
-  .maker a:hover { color: #f1d699; }
-  .maker .row { display: flex; gap: 14px; justify-content: flex-end; flex-wrap: wrap; }
+/* ---- the seed packet: who he is, always visible ---- */
+.packet {
+  position: fixed; z-index: 4; top: var(--gut); left: var(--gut);
+  width: min(22.5rem, calc(100vw - 32px));
+  padding: 1.5rem 1.5rem 1.25rem;
+  background: var(--violet); color: var(--paper);
+  border-radius: 0 0 14px 14px;
+  transform: rotate(-1.2deg);
+  box-shadow: 0 1.6rem 3rem -1.6rem rgb(42 14 51 / .75);
+  transition: transform .45s cubic-bezier(.3, .8, .3, 1), visibility 0s;
+}
+.packet::before { /* crimped top edge */
+  content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 7px;
+  background: conic-gradient(from 135deg at 50% 0, var(--violet) 90deg, transparent 0) 0 0 / 14px 7px repeat-x;
+}
+.packet h1 { margin: 0; font: 400 clamp(2.3rem, 3.6vw, 3rem)/1 var(--display); color: var(--glow); }
+.latin { margin: .3rem 0 .9rem; font-style: italic; color: rgb(255 242 204 / .78); }
+.intro { margin: 0 0 1rem; max-width: 34ch; }
+.links { display: flex; flex-wrap: wrap; gap: .45rem; margin: 0; padding: 0; list-style: none; }
+.links a {
+  display: inline-block; padding: .42rem .9rem; border-radius: 999px;
+  background: var(--paper); color: var(--plum); font-weight: 650; text-decoration: none;
+}
+.links a:hover { background: var(--glow); }
+.packet :focus-visible, .note :focus-visible { outline-color: var(--glow); }
 
-  .hint {
-    position: fixed; left: 50%; top: 22px; transform: translateX(-50%); z-index: 2;
-    margin: 0; font-style: italic; font-size: 15px; color: var(--ivory); opacity: .78;
-    text-shadow: 0 1px 8px rgba(0,0,0,.7); white-space: nowrap; pointer-events: none;
-    transition: opacity .6s ease;
-  }
-  .hint.gone { opacity: 0; }
+/* ---- plant tags hanging under each flower ---- */
+/* tags wait for the meadow to place them (or for .no-gl to list them) */
+body:not(.gl, .no-gl) #tags { visibility: hidden; }
+#tags { position: fixed; inset: 0; z-index: 3; pointer-events: none; transition: opacity .35s; }
+#tags.away { opacity: 0; visibility: hidden; transition: opacity .35s, visibility 0s .35s; }
+.tag {
+  position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer;
+  display: flex; align-items: center; gap: .45em; white-space: nowrap;
+  padding: .45em .85em .5em .55em; border: 0; border-radius: 7px;
+  font: 400 1.02rem/1 var(--display); color: var(--plum); background: var(--paper);
+  box-shadow: 0 3px 0 rgb(42 14 51 / .4);
+  will-change: transform;
+}
+.tag::before { /* tie hole, tinted with the flower's colour */
+  content: ""; flex: none; width: .62em; height: .62em; border-radius: 50%;
+  background: var(--c); box-shadow: inset 0 0 0 2px var(--plum);
+}
+.tag small { font: italic 500 .78rem/1 var(--body); opacity: .75; }
+.tag.bud { background: rgb(255 242 204 / .74); }
+.tag.hot, .tag:hover { background: #fff; }
+.tag.seen::after {
+  content: ""; width: .6em; height: .68em; background: var(--honey);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
 
-  /* while a card is held up */
-  .held {
-    position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); z-index: 4;
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; align-items: center;
-    width: max-content; max-width: calc(100vw - 32px);
-  }
-  .held[hidden] { display: none; }
-  .held button { white-space: nowrap; }
-  .held .step { width: 42px; padding-left: 0; padding-right: 0; font-size: 18px; }
-  .held .links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-  .held .links[hidden] { display: none; }
-  .held .links a {
-    font: 600 14px/1 Literata, Georgia, serif; color: var(--ivory); text-decoration: none;
-    padding: 11px 12px 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(220,185,110,.8); background: rgba(29,5,9,.55);
-  }
-  .held .links a:hover { background: rgba(29,5,9,.85); }
+/* ---- the bee's own label, until the first landing ---- */
+#you {
+  position: fixed; left: 0; top: 0; z-index: 3; pointer-events: none; white-space: nowrap;
+  padding: .45rem .75rem; border-radius: 10px;
+  background: var(--plum); color: var(--paper); font: 600 .92rem/1.2 var(--body);
+  transition: opacity .5s;
+}
+#you::after {
+  content: ""; position: absolute; left: 50%; top: 100%; margin-left: -6px;
+  border: 6px solid transparent; border-top-color: var(--plum);
+}
+#you.gone { opacity: 0 !important; }
 
-  /* keyboard index: each card is a button that appears only while focused */
-  .index { list-style: none; margin: 0; padding: 0; }
-  .index button {
-    position: fixed; left: 50%; top: 18px; z-index: 5; transform: translate(-50%, -160%);
-    font: 600 15px/1.2 Literata, Georgia, serif; color: var(--ink); background: var(--ivory);
-    border: 0; border-radius: 3px; padding: 10px 14px; white-space: nowrap;
-  }
-  .index button:focus { transform: translate(-50%, 0); }
-  .index button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+/* ---- pollen meter ---- */
+.pollen {
+  position: fixed; z-index: 3; left: var(--gut); bottom: var(--gut);
+  display: flex; align-items: center; gap: .7rem;
+  padding: .5rem .95rem .5rem .75rem; border-radius: 999px;
+  background: rgb(42 14 51 / .8); color: var(--paper); font-size: .9rem;
+}
+.pollen p { margin: 0; }
+.cells { display: flex; gap: 3px; }
+.cells i {
+  width: 11px; height: 13px; background: rgb(255 242 204 / .25);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  transition: background .4s;
+}
+.cells i.on { background: var(--honey); }
+.pollen button {
+  border: 0; padding: .2rem .65rem; border-radius: 999px; cursor: pointer;
+  background: var(--honey); color: var(--plum); font: 650 .85rem/1.4 var(--body);
+}
 
-  /* the deck laid flat: screen readers always, everyone when WebGL is unavailable */
-  .flat { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .nogl canvas.table, .nogl .hint, .nogl .tools, .nogl .index { display: none; }
-  .nogl { overflow: auto; display: flex; flex-direction: column; min-height: 100%; }
-  .nogl .flat { order: 1; }
-  .nogl .bar { order: 2; position: static; padding-top: 8px; padding-bottom: 32px; }
-  .nogl .flat {
-    position: static; width: auto; height: auto; overflow: visible; clip-path: none;
-    padding: 40px 24px 24px; max-width: 1200px; margin: 0 auto; width: 100%;
-  }
-  .flat h2 { font: 400 clamp(40px, 7vw, 76px)/1 "Rozha One", Georgia, serif; color: var(--gold); margin: 0 0 6px; }
-  .flat > p { margin: 0 0 28px; max-width: 60ch; font-style: italic; }
-  .flat ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
-  .flat li {
-    background: var(--stock); color: var(--ink); border-radius: 12px; padding: 18px 18px 22px; aspect-ratio: 5 / 7;
-    box-shadow: 0 1px 0 rgba(0,0,0,.4), 0 14px 26px -12px rgba(0,0,0,.7); overflow: hidden;
-  }
-  .flat .ix { font: 400 30px/1 "Rozha One", Georgia, serif; }
-  .flat .ix.red { color: var(--red); }
-  .flat h3 { font: 400 26px/1.1 "Rozha One", Georgia, serif; margin: 14px 0 8px; }
-  .flat h3 small { display: block; font: italic 400 14px/1.3 Literata, Georgia, serif; margin-bottom: 4px; }
-  .flat li p { margin: 0 0 6px; font-size: 15px; line-height: 1.45; }
-  .flat .pencil { font-family: "Reenie Beanie", cursive; font-size: 22px; color: var(--graphite); line-height: 1.1; }
-  .flat li a { color: var(--red); }
+/* ---- what you find when you land ---- */
+.note {
+  position: fixed; z-index: 6; top: 50%; right: var(--gut);
+  width: min(27rem, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto;
+  padding: 1.7rem 1.75rem 1.4rem;
+  background: var(--plum); color: var(--paper);
+  border-radius: 22px; border-top: 8px solid var(--c, var(--honey));
+  box-shadow: 0 2rem 4rem -2rem rgb(42 14 51 / .85);
+  transform: translateY(-50%);
+  animation: noteIn .45s cubic-bezier(.2, .9, .3, 1.15);
+}
+.note[hidden] { display: none; }
+@keyframes noteIn { from { opacity: 0; transform: translate(24px, -50%) rotate(2deg); } }
+.note h2 { margin: 0; font: 400 clamp(2rem, 3.2vw, 2.7rem)/1.05 var(--display); color: var(--glow); outline: none; }
+.landed { margin: .35rem 0 1.15rem; font-style: italic; color: rgb(255 242 204 / .7); }
+.note p { margin: 0 0 .85rem; max-width: 60ch; }
+.note ul { margin: 0 0 1rem; padding-left: 1.15rem; }
+.note li { margin: .25rem 0; }
+.note li::marker { color: var(--honey); }
+.fill {
+  padding-left: .75rem; border-left: 2px dashed rgb(255 227 161 / .55);
+  font-style: italic; color: rgb(255 242 204 / .62);
+}
+.note a { color: var(--glow); text-underline-offset: .2em; }
+.actions { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1.25rem; }
+.actions button {
+  border: 0; border-radius: 999px; padding: .65rem 1.15rem; cursor: pointer;
+  font: 650 1rem/1 var(--body);
+}
+#next { background: var(--glow); color: var(--plum); }
+#close { background: transparent; color: var(--paper); box-shadow: inset 0 0 0 2px rgb(255 242 204 / .4); }
 
-  @media (max-width: 760px) {
-    .bar { flex-direction: column-reverse; align-items: stretch; gap: 10px; padding: 0 16px max(14px, env(safe-area-inset-bottom)); }
-    .maker { text-align: left; font-size: 14px; }
-    .maker .row { justify-content: flex-start; }
-    .tools button { padding: 10px 11px 11px; font-size: 13px; }
-    .hint { top: 14px; font-size: 14px; white-space: normal; width: calc(100% - 32px); text-align: center; }
-    .held { bottom: 118px; }
-    .held .links a { padding: 10px 9px 11px; font-size: 13px; }
-    .held .links { order: -1; flex-basis: 100%; } /* project links get their own row above the controls */
+/* ---- phones ---- */
+@media (max-width: 700px) {
+  .packet { padding: 1.1rem 1.1rem 1rem; transform: rotate(-.8deg); }
+  .packet h1 { font-size: 2.1rem; }
+  .latin { margin-bottom: .55rem; font-size: .95rem; }
+  .intro { margin-bottom: .75rem; font-size: .95rem; line-height: 1.45; }
+  .links a { padding: .36rem .8rem; font-size: .95rem; }
+  .tag { font-size: .9rem; }
+  .tag small { display: none; }
+  .pollen { font-size: .82rem; }
+}
+/* narrow screens: the note becomes a bottom sheet */
+@media (max-width: 900px) and (min-height: 521px) {
+  .note {
+    top: auto; right: 16px; left: 16px; bottom: 16px; width: auto; max-height: 54dvh;
+    padding: 1.3rem 1.3rem 1.1rem; transform: none; animation-name: sheetIn;
   }
-  @media (max-width: 560px) { .flat li { aspect-ratio: auto; } }
-  @media (prefers-reduced-motion: reduce) {
-    .tools button, .held button, .hint { transition: none; }
+  @keyframes sheetIn { from { opacity: 0; transform: translateY(30px); } }
+  .landed { margin-bottom: .8rem; }
+}
+
+/* ---- short screens (phones on their side) ---- */
+@media (max-height: 520px) {
+  .packet { width: min(25rem, 52vw); padding: .85rem 1rem .9rem; }
+  .packet h1 { font-size: 1.8rem; }
+  .latin { display: none; }
+  .intro { margin: .45rem 0 .6rem; font-size: .86rem; line-height: 1.4; max-width: none; }
+  .links a { padding: .3rem .75rem; font-size: .88rem; }
+  .note { max-height: calc(100dvh - 24px); padding: 1.1rem 1.3rem 1rem; }
+  .tag { font-size: .86rem; }
+  .tag small, .pollen p { display: none; }
+}
+/* small screens: the packet tucks away while you read a note */
+@media (max-width: 900px), (max-height: 520px) {
+  .is-landed .packet {
+    transform: translateY(calc(-100% - 40px)); visibility: hidden;
+    transition: transform .45s cubic-bezier(.3, .8, .3, 1), visibility 0s .45s;
   }
+}
+
+/* ---- no WebGL: the tags become a plain list over the painted sky ---- */
+.no-gl #meadow, .no-gl #you { display: none; }
+.no-gl #tags {
+  inset: auto var(--gut) calc(var(--gut) + 64px);
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .6rem;
+}
+.no-gl .tag { position: static; transform: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .note { animation: none; }
+  .packet, .is-landed .packet { transition: none; }
+  #tags, #you, .cells i { transition: none; }
+}
+
+/* project links under a note */
+.note .go { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1rem; }
+.note .go a {
+  padding: .38rem .85rem; border-radius: 999px; text-decoration: none; font-weight: 650;
+  box-shadow: inset 0 0 0 2px rgb(255 227 161 / .45);
+}
+.note .go a:hover { background: rgb(255 227 161 / .14); }
