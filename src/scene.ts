@@ -149,7 +149,7 @@ export async function startScene(glTimer: number): Promise<void> {
     const col = suitColor(c.rank === 'joker' ? 'joker' : c.suit);
     g.fillStyle = col; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
     if (c.rank === 'joker') {
-      font(g, 66, ROZHA); [...'JOKER'].forEach((ch, i) => g.fillText(ch, 100, 136 + i * 70));
+      font(g, 66, ROZHA); [...'WILD'].forEach((ch, i) => g.fillText(ch, 100, 136 + i * 70));
       pip(g, 'joker', 100, 520, 92);
       return;
     }

@@ -7,7 +7,7 @@ export function $(id: string): HTMLElement {
 }
 
 export const isFill = (s: unknown): boolean => typeof s === 'string' && s.startsWith('[fill');
-export const cardLabel = (c: Card): string => c.rank === 'joker' ? `The joker: ${DAKSH.name}` : c.rank === 'A' ? 'The ace of spades: how to reach Daksh' : `Jack of ${isFill(c.trade) ? 'a trade still to be written' : c.trade}`;
+export const cardLabel = (c: Card): string => c.rank === 'joker' ? `The wildcard: ${DAKSH.name}` : c.rank === 'A' ? 'The ace of spades: how to reach Daksh' : `Jack of ${isFill(c.trade) ? 'a trade still to be written' : c.trade}`;
 
 export function fail(glTimer: number): void {
   clearTimeout(glTimer);
@@ -31,7 +31,7 @@ export function renderFallback(): number {
   $('flat').innerHTML = `<h2>${esc(D.name)}</h2><p>Jack of all trades. His deck, laid flat.</p><ol>` +
     D.cards.map((c) => {
       const red = c.suit === 'hearts' || c.suit === 'diamonds' || c.rank === 'joker';
-      const ix = c.rank === 'joker' ? 'Joker' : `${c.rank} ${pip[c.suit]}`;
+      const ix = c.rank === 'joker' ? 'Wild' : `${c.rank} ${pip[c.suit]}`;
       if (c.rank === 'A') return `<li><div class="ix">${ix}</div><h3><small>The maker’s card</small>Write to Daksh</h3>
         <p><a href="mailto:${esc(D.email)}">${esc(D.email)}</a></p><p><a href="${esc(D.github)}">${esc(gh)}</a></p><p><a href="${esc(D.x)}">${esc(xx)}</a></p></li>`;
       const kicker = c.rank === 'joker' ? 'The wildcard' : 'Jack of';
