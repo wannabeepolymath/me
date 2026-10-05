@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daksh Jain</title>
+<meta name="description" content="A radio tuned to Daksh Jain. Drag the dial between Bangalore, his curiosities, the workshop and the mailbag.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%232a1410%27/%3E%3Crect x=%274%27 y=%278%27 width=%2724%27 height=%2716%27 rx=%273%27 fill=%27%23e9bd52%27/%3E%3Crect x=%2715%27 y=%278%27 width=%272%27 height=%2716%27 fill=%27%23d7331c%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+/*
+  One object: a shortwave receiver. The viewport is its dial glass.
+  A fixed red needle, a printed scale that slides under it, and signal strength
+  deciding how legible the programme is. Everything else is cabinet.
+*/
+:root {
+  --bakelite: #2a1410;
+  --bakelite-2: #40201a;
+  --glass-edge: #8f6120;
+  --glass: #e9bd52;
+  --glass-hot: #fbe39a;
+  --print: #1b100a;
+  --print-soft: rgba(27, 16, 10, .72);
+  --needle: #d7331c;
+  --brass: #c99a3b;
+  --brass-2: #8a6420;
+  --eye: #8fe8a0;
+  --eye-dark: #0b2214;
+  --dial: "Big Shoulders Display", Oswald, Impact, "Arial Narrow", sans-serif;
+  --copy: Spectral, Georgia, "Times New Roman", serif;
+  --name: clamp(64px, 12.5vw, 196px);   /* station print size; the scale is derived from it */
+  --k: calc(var(--name) / 50);         /* px per kHz */
+  --frame: clamp(10px, 1.4vw, 18px);
+  --pad: clamp(18px, 3vw, 44px);
+  --sig: 0;                            /* 0 static .. 1 locked, set by script */
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--bakelite); -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; min-height: 100vh; min-height: 100svh; padding: var(--frame);
+  display: grid; grid-template-rows: auto 1fr auto; gap: calc(var(--frame) * .8);
+  background: radial-gradient(140% 100% at 50% 0%, var(--bakelite-2), var(--bakelite) 70%);
+  color: var(--print); font: 400 1.0625rem/1.5 var(--copy); -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+h1, h2, p, dl, dd, dt, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+a { color: inherit; text-decoration-thickness: 1.5px; text-underline-offset: .18em; }
+a:hover { color: var(--needle); }
+:focus-visible { outline: 3px solid var(--needle); outline-offset: 4px; border-radius: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- cabinet top: nameplate, magic eye, sound knob ---------- */
+header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 .25rem; }
+.plate {
+  display: inline-grid; padding: .5rem .9rem .55rem; border-radius: 3px;
+  background: linear-gradient(170deg, #e2b85a, var(--brass) 45%, var(--brass-2));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 0 rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.5);
+  color: #2a1a08; text-shadow: 0 1px 0 rgba(255,235,180,.45);
+}
+.plate h1 { font: 900 1.25rem/1 var(--dial); letter-spacing: .09em; text-transform: uppercase; }
+.plate small { font: 700 .72rem/1 var(--dial); letter-spacing: .14em; text-transform: uppercase; margin-top: .3rem; opacity: .8; }
+.controls { display: flex; align-items: center; gap: 1.1rem; }
+#eye {
+  width: 26px; height: 26px; border-radius: 50%; flex: none;
+  background: conic-gradient(from calc(var(--gap) / -2), var(--eye-dark) var(--gap), var(--eye) 0);
+  --gap: calc((1 - var(--sig)) * 150deg);
+  box-shadow: 0 0 0 3px #1a0c08, 0 0 0 5px var(--brass-2), 0 0 18px rgba(143,232,160,calc(var(--sig) * .7)), inset 0 0 8px rgba(0,0,0,.6);
+}
+#snd {
+  display: flex; align-items: center; gap: .6rem; padding: 0; border: 0; background: none; cursor: pointer;
+  color: #e8cf96; font: 700 .8rem/1 var(--dial); letter-spacing: .12em; text-transform: uppercase;
+}
+#snd .knob {
+  width: 34px; height: 34px; border-radius: 50%; position: relative;
+  background: radial-gradient(circle at 35% 30%, #5a3024, #22100c 70%);
+  box-shadow: 0 0 0 2px var(--brass-2), 0 3px 6px rgba(0,0,0,.6), inset 0 1px 1px rgba(255,255,255,.15);
+  transition: transform .4s cubic-bezier(.3,1.4,.5,1);
+}
+#snd .knob::after { content: ""; position: absolute; left: 50%; top: 4px; width: 3px; height: 11px; margin-left: -1.5px; background: #e8cf96; border-radius: 2px; }
+#snd[aria-pressed="true"] .knob { transform: rotate(135deg); }
+#snd span.on { display: none; }
+#snd[aria-pressed="true"] span.on { display: inline; }
+#snd[aria-pressed="true"] span.off { display: none; }
+
+/* ---------- the dial glass ---------- */
+#glass {
+  position: relative; overflow: hidden; overflow: clip; border-radius: 16px; min-height: 420px;
+  background: radial-gradient(120% 95% at 50% 42%, var(--glass-hot) 0%, var(--glass) 36%, var(--glass-edge) 100%);
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,.45), inset 0 14px 42px rgba(60,30,0,.45), inset 0 -24px 70px rgba(60,30,0,.4), 0 0 0 1px #140906;
+  cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  transition: filter 1.6s ease-out;
+}
+#glass.cold { filter: brightness(.3) saturate(.6); }
+#glass.dragging { cursor: grabbing; }
+#glass::before { /* reflection on the pane */
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 6;
+  background: linear-gradient(178deg, rgba(255,255,255,.22), rgba(255,255,255,0) 18%, rgba(255,255,255,0) 86%, rgba(255,255,255,.06));
+}
+#lamp { /* the dial lamp sits behind the needle; it brightens as the signal locks */
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(40% 70% at 50% 35%, rgba(255,246,205,.9), rgba(255,240,180,0) 100%);
+  opacity: calc(var(--sig) * .85);
+}
+#noise { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; mix-blend-mode: multiply; image-rendering: pixelated; opacity: var(--noise, 0); z-index: 3; }
+
+#strip { position: absolute; top: clamp(14px, 2.6vh, 26px); left: 0; width: calc(1180 * var(--k)); will-change: transform; z-index: 2; }
+.ruler { position: relative; height: 48px; }
+.ruler::before, .ruler::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; }
+.ruler::before { height: 9px; background: repeating-linear-gradient(90deg, var(--print) 0 1.5px, transparent 1.5px calc(var(--k) * 10)); opacity: .7; }
+.ruler::after  { height: 20px; background: repeating-linear-gradient(90deg, var(--print) 0 2px, transparent 2px calc(var(--k) * 50)); }
+.ruler span { position: absolute; bottom: 24px; transform: translateX(-50%); font: 700 clamp(13px, 1.1vw, 17px)/1 var(--dial); letter-spacing: .05em; color: var(--print); }
+.ruler .unit { bottom: 26px; font-weight: 900; opacity: .7; }
+.ruler .paw { bottom: 23px; width: 14px; height: 14px; background:
+  radial-gradient(circle at 50% 72%, var(--print) 36%, transparent 38%),
+  radial-gradient(circle at 18% 36%, var(--print) 14%, transparent 16%),
+  radial-gradient(circle at 40% 18%, var(--print) 14%, transparent 16%),
+  radial-gradient(circle at 62% 18%, var(--print) 14%, transparent 16%),
+  radial-gradient(circle at 84% 36%, var(--print) 14%, transparent 16%); opacity: .55; }
+.names { position: relative; height: calc(var(--name) * .95); margin-top: 4px; }
+.names button {
+  position: absolute; top: 0; transform: translateX(-50%); padding: 0 .06em; border: 0; background: none; cursor: pointer;
+  font: 900 var(--name)/1 var(--dial); letter-spacing: .01em; text-transform: uppercase; color: var(--print); white-space: nowrap;
+  transition: color .25s;
+}
+.names button:hover { color: var(--needle); }
+.names button:focus-visible { outline-offset: -3px; }
+
+#needle { position: absolute; left: 50%; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; background: var(--needle); z-index: 4; pointer-events: none;
+  box-shadow: 0 0 10px rgba(215,51,28,.55), 0 0 1px rgba(0,0,0,.6); }
+#needle::before { content: ""; position: absolute; top: 0; left: 50%; width: 0; height: 0; margin-left: -9px; border: 9px solid transparent; border-top: 12px solid var(--needle); }
+#hint { position: absolute; left: 50%; top: calc(clamp(14px, 2.6vh, 26px) + 48px + var(--name) * .95 + 18px); transform: translateX(-50%);
+  display: flex; align-items: center; gap: .45rem; font: italic 400 .95rem/1 var(--copy); color: var(--print-soft); pointer-events: none; z-index: 5;
+  transition: opacity .6s; white-space: nowrap; }
+#hint.gone { opacity: 0; }
+#hint svg { width: 34px; height: 10px; }
+
+#programme { position: absolute; left: var(--pad); right: var(--pad); bottom: var(--pad); z-index: 5; cursor: auto; user-select: text; -webkit-user-select: text;
+  max-height: calc(100% - clamp(14px, 2.6vh, 26px) - 48px - var(--name) * .95 - 52px); overflow-y: auto; overscroll-behavior: contain;
+  opacity: calc(.08 + var(--sig) * .92); }
+.station { display: none; max-width: 40rem; }
+.station.on { display: grid; gap: 1rem; }
+.station .freq { font: 700 .9rem/1 var(--dial); letter-spacing: .14em; text-transform: uppercase; color: var(--print-soft); }
+.station h2 { font: 400 clamp(1.75rem, 3.3vw, 3rem)/1.06 var(--copy); letter-spacing: -.012em; text-wrap: balance; }
+.station p { font-size: clamp(1.0625rem, 1.35vw, 1.25rem); color: var(--print-soft); text-wrap: pretty; max-width: 34rem; }
+.station p b { font-weight: 500; color: var(--print); }
+.station dl { display: grid; gap: .35rem .9rem; }
+.station dl > div { display: grid; grid-template-columns: max-content 1fr; align-items: baseline; gap: .6rem; }
+.station dt { font-weight: 500; }
+.station dl > div::before { content: ""; order: 1; align-self: end; margin-bottom: .45em; border-bottom: 2px dotted rgba(27,16,10,.35); }
+.station dl > div { grid-template-columns: max-content minmax(0, 1fr) max-content; }
+.station dd { order: 2; font-style: italic; color: var(--print-soft); text-align: right; }
+.station ul { display: grid; gap: .45rem; }
+.station li { color: var(--print-soft); font-size: clamp(1.0625rem, 1.35vw, 1.25rem); }
+.station li b { font-weight: 500; color: var(--print); }
+.station .links { display: flex; flex-wrap: wrap; gap: .6rem 1.6rem; font-size: 1.1rem; }
+.fill { font-style: italic; color: rgba(27,16,10,.55); }
+
+/* printed station legend, bottom-right of the glass */
+.legend { position: absolute; right: var(--pad); bottom: var(--pad); z-index: 5; display: grid; gap: .45rem; justify-items: end; }
+.legend button { display: flex; gap: .7rem; align-items: center; border: 0; background: none; cursor: pointer; padding: .15rem .3rem;
+  font: 700 .95rem/1 var(--dial); letter-spacing: .08em; text-transform: uppercase; color: var(--print-soft); }
+.legend button .f { font-weight: 900; color: var(--print); min-width: 2.7em; text-align: right; }
+.legend button::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--needle); opacity: 0; transition: opacity .25s; }
+.legend button.live::after { opacity: 1; }
+.legend button:hover { color: var(--needle); }
+@media (max-width: 1000px) { .legend { display: none; } }
+
+/* the unlisted station's cat, drawn in css */
+.cat { position: relative; width: 120px; height: 72px; margin-top: .4rem; }
+.cat .body { position: absolute; left: 18px; bottom: 0; width: 100px; height: 50px; border-radius: 50px 50px 10px 10px / 50px 50px 10px 10px; background: var(--print); }
+.cat .head { position: absolute; left: 0; bottom: 20px; width: 50px; height: 44px; border-radius: 50%; background: var(--print); }
+.cat .head::before, .cat .head::after { content: ""; position: absolute; top: -10px; border: 11px solid transparent; border-bottom: 18px solid var(--print); border-top: 0; }
+.cat .head::before { left: 3px; transform: rotate(-16deg); } .cat .head::after { right: 3px; transform: rotate(16deg); }
+.cat .eye { position: absolute; top: 20px; width: 7px; height: 9px; border-radius: 50%; background: var(--glass-hot); animation: blink 5s infinite; }
+.cat .eye.l { left: 13px; } .cat .eye.r { left: 30px; }
+.cat .tail { position: absolute; right: -6px; bottom: 6px; width: 16px; height: 56px; border-radius: 10px; background: var(--print); transform-origin: 50% 100%; animation: tail 3.2s ease-in-out infinite; }
+@keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+@keyframes tail { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(14deg); } }
+
+/* ---------- speaker grille: contact is always one glance away ---------- */
+footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1.5rem; padding: .85rem 1rem; border-radius: 10px;
+  background: radial-gradient(circle at 2px 2px, #0f0604 1.6px, transparent 1.8px) 0 0 / 7px 7px, #35190f; box-shadow: inset 0 0 0 1px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06);
+  color: #e8cf96; font: 400 .95rem/1 var(--copy); }
+footer nav { display: flex; flex-wrap: wrap; gap: .5rem 1.6rem; }
+footer a { text-decoration-color: rgba(232,207,150,.5); }
+footer a:hover { color: #fff; }
+footer .keys { color: rgba(232,207,150,.6); font-style: italic; }
+kbd { font: 700 .72rem/1 var(--dial); letter-spacing: .06em; padding: .15em .35em; border: 1px solid rgba(232,207,150,.45); border-radius: 3px; font-style: normal; }
+
+@media (max-width: 720px) {
+  #snd .on, #snd .off { display: none !important; }
+  footer .keys { display: none; }
+  #needle { bottom: auto; height: calc(clamp(14px, 2.6vh, 26px) + 48px + var(--name) * .95 + 44px); }
+  #programme { top: calc(clamp(14px, 2.6vh, 26px) + 48px + var(--name) * .95 + 56px); bottom: var(--pad); max-height: none; }
+  .station dl > div { grid-template-columns: 1fr; gap: 0; }
+  .station dl > div::before { display: none; }
+  .station dd { text-align: left; }
+  .station .links { flex-direction: column; gap: .4rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #glass, #snd .knob, #hint { transition: none; }
+  .cat .eye, .cat .tail { animation: none; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="plate">
+    <h1>Daksh Jain</h1>
+    <small>receiver, Bangalore</small>
+  </div>
+  <div class="controls">
+    <div id="eye" title="Tuning indicator" aria-hidden="true"></div>
+    <button id="snd" aria-pressed="false"><span class="knob" aria-hidden="true"></span><span class="off">Sound off</span><span class="on">Sound on</span></button>
+  </div>
+</header>
+
+<main id="glass" aria-label="Dial. Drag left or right to tune.">
+  <div id="lamp" aria-hidden="true"></div>
+  <div id="strip">
+    <div class="ruler" id="ruler" aria-hidden="true"></div>
+    <div class="names" id="names"></div>
+  </div>
+  <canvas id="noise" aria-hidden="true"></canvas>
+  <div id="needle" aria-hidden="true"></div>
+  <div id="hint" aria-hidden="true"><svg viewBox="0 0 34 10" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 5h32M5 1 1 5l4 4M29 1l4 4-4 4"/></svg>drag to tune</div>
+  <div id="programme"></div>
+  <nav class="legend" id="legend" aria-label="Stations"></nav>
+  <div class="sr" aria-live="polite" id="live"></div>
+</main>
+
+<footer>
+  <nav aria-label="Contact">
+    <a id="f-mail" href="#">email</a>
+    <a id="f-gh" href="#" rel="me">GitHub</a>
+    <a id="f-x" href="#" rel="me">X</a>
+  </nav>
+  <span class="keys"><kbd>←</kbd> <kbd>→</kbd> change station</span>
+</footer>
+
+<script>
+/* ============ Edit me: everything personal lives here. "[fill: …]" values render as unannounced programmes. ============ */
+const DAKSH = {
+  name: "Daksh Jain",
+  city: "Bangalore",
+  school: "BITS Pilani",
+  graduates: "2027",
+  email: "dakshjainn2004@gmail.com",
+  github: "https://github.com/wannabeepolymath",
+  x: "https://x.com/dakshhjainn",
+  notSoftware: "[fill: one thing he makes that isn't software]",
+  curiosities: [
+    ["Learning",                       "[fill: an instrument, a language, a sport]"],
+    ["Reading",                        "[fill: a book, or this month's rabbit hole]"],
+    ["Listening to",                   "[fill: an album on repeat]"],
+    ["Can't explain why",              "[fill: an interest with no career value]"],
+    ["Would talk for an hour about",   "[fill: a topic]"],
+  ],
+  workshop: [
+    ["Parla",    "a voice-dictation app for macOS"],
+    ["Burmese",  "a companion cat that lives on your desktop"],
+    ["Mux",      "a WebSocket multiplexer written in Rust"],
+    ["Not Redis","a Redis clone written in Go"],
+    ["Solana game", "a Telegram game that settles on-chain"],
+    ["Emergent", "a stint building backends for AI agents"],
+  ],
+};
+/* ================================================================================================================= */
+
+const fill = s => s.replace(/\[fill:[^\]]*\]/g, m => `<span class="fill">${m}</span>`);
+const STATIONS = [
+  { f: 630, name: "Bangalore", html: `
+      <h2>You've reached ${DAKSH.name}.</h2>
+      <p>He lives in ${DAKSH.city} and is studying computer science at ${DAKSH.school}, a bachelor's and a master's back to back, done in ${DAKSH.graduates}. He builds software, and ${fill(DAKSH.notSoftware)}, and would rather be curious about everything than expert in one thing. The GitHub handle is <b>wannabeepolymath</b>; the wannabe is deliberate.</p>
+      <p>Keep turning. Three more stations are printed on the glass. One isn't.</p>` },
+  { f: 900, name: "Curiosities", html: `
+      <h2>The polymath programme.</h2>
+      <p>What he's into this month, in no particular order. Schedule subject to change without notice.</p>
+      <dl>${DAKSH.curiosities.map(([k, v]) => `<div><dt>${k}</dt><dd>${fill(v)}</dd></div>`).join("")}</dl>` },
+  { f: 1170, name: "Workshop", html: `
+      <h2>The workshop. One room of the house, not the house.</h2>
+      <ul>${DAKSH.workshop.map(([k, v]) => `<li><b>${k}</b>, ${v}</li>`).join("")}</ul>
+      <p>Most of it is on <a href="${DAKSH.github}">GitHub</a>.</p>` },
+  { f: 1440, name: "Mailbag", html: `
+      <h2>Letters, replies, and the occasional unsolicited idea.</h2>
+      <p>Email gets read. There is no phone number, on purpose.</p>
+      <div class="links"><a href="mailto:${DAKSH.email}">${DAKSH.email}</a><a href="${DAKSH.github}">github / wannabeepolymath</a><a href="${DAKSH.x}">x / dakshhjainn</a></div>` },
+  { f: 1660, name: "", secret: true, html: `
+      <h2>Unlisted.</h2>
+      <p>You found Burmese, the cat from his desktop. It purrs on this frequency; turn the sound on to hear it.</p>
+      <div class="cat" aria-hidden="true"><div class="tail"></div><div class="body"></div><div class="head"><div class="eye l"></div><div class="eye r"></div></div></div>` },
+];
+
+const LO = 520, HI = 1700, BAND = 22;
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = id => document.getElementById(id);
+const glass = $("glass"), strip = $("strip"), prog = $("programme"), hint = $("hint"), live = $("live");
+
+/* ---------- print the scale ---------- */
+const ruler = $("ruler"), names = $("names");
+for (let f = 600; f < HI; f += 100) { const s = document.createElement("span"); s.textContent = f; s.style.left = `calc(${f - LO} * var(--k))`; ruler.appendChild(s); }
+const unit = document.createElement("span"); unit.className = "unit"; unit.textContent = "kHz"; unit.style.left = `calc(${LO + 22 - LO} * var(--k))`; ruler.appendChild(unit);
+STATIONS.forEach((s, i) => {
+  s.el = document.createElement("section"); s.el.className = "station"; s.el.innerHTML = `<div class="freq">${s.f} kHz${s.secret ? "" : ", " + s.name}</div>` + s.html; prog.appendChild(s.el);
+  if (s.secret) { const p = document.createElement("span"); p.className = "paw"; p.style.left = `calc(${s.f - LO} * var(--k))`; ruler.appendChild(p); return; }
+  const b = document.createElement("button"); b.type = "button"; b.textContent = s.name; b.setAttribute("aria-label", `Tune to ${s.name}, ${s.f} kHz`);
+  b.style.left = `calc(${s.f - LO} * var(--k))`; b.addEventListener("click", () => tuneTo(s)); b.addEventListener("focus", () => tuneTo(s)); names.appendChild(b);
+});
+STATIONS.filter(s => !s.secret).forEach(s => { const b = document.createElement("button"); b.type = "button"; b.innerHTML = `<span class="f">${s.f}</span>${s.name}`; b.addEventListener("click", () => tuneTo(s)); s.leg = b; $("legend").appendChild(b); });
+$("f-mail").href = "mailto:" + DAKSH.email; $("f-gh").href = DAKSH.github; $("f-x").href = DAKSH.x;
+
+/* ---------- tuning ---------- */
+let freq = RM ? 630 : 548, target = null, vel = 0, dragging = false, k = 3, cx = 0, current = null, locked = null, moved = false;
+const signalOf = f => Math.max(...STATIONS.map(s => Math.exp(-(((f - s.f) / BAND) ** 2))));
+const nearest = f => STATIONS.reduce((a, s) => Math.abs(s.f - f) < Math.abs(a.f - f) ? s : a);
+const clamp = f => Math.min(HI, Math.max(LO, f));
+function measure() { k = parseFloat(getComputedStyle(names.firstElementChild).fontSize) / 50; cx = glass.clientWidth / 2; sizeNoise(); }
+function tuneTo(s) { target = s.f; vel = 0; usedDial(); }
+function detent() { const s = nearest(freq); if (Math.abs(s.f - freq) < 18) target = s.f; }
+function usedDial() { if (!moved) { moved = true; hint.classList.add("gone"); } }
+
+let px = 0, py = 0, pf = 0, lastX = 0, lastT = 0, axis = null;
+glass.addEventListener("pointerdown", e => {
+  if (e.button || e.target.closest("a, button") || e.target.closest("#programme")) return;
+  dragging = true; axis = null; target = null; vel = 0; px = e.clientX; py = e.clientY; pf = freq; lastX = e.clientX; lastT = e.timeStamp;
+  glass.setPointerCapture(e.pointerId); glass.classList.add("dragging");
+});
+glass.addEventListener("pointermove", e => {
+  if (!dragging) return;
+  if (!axis) { const dx = Math.abs(e.clientX - px), dy = Math.abs(e.clientY - py); if (dx < 6 && dy < 6) return; axis = dx >= dy ? "x" : "y"; }
+  if (axis === "y") return;
+  freq = clamp(pf - (e.clientX - px) / k);
+  const dt = e.timeStamp - lastT; if (dt > 0) { vel = -(e.clientX - lastX) / k / dt * 16; } lastX = e.clientX; lastT = e.timeStamp;
+  if (Math.abs(e.clientX - px) > 6) usedDial();
+});
+const release = e => { if (!dragging) return; dragging = false; glass.classList.remove("dragging"); if (RM || Math.abs(vel) < .4) { vel = 0; detent(); } };
+glass.addEventListener("pointerup", release); glass.addEventListener("pointercancel", release);
+
+let wheelT;
+glass.addEventListener("wheel", e => {
+  if (e.target.closest("#programme") && prog.scrollHeight > prog.clientHeight) return;
+  e.preventDefault(); target = null; vel = 0; freq = clamp(freq + (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * .18);
+  usedDial(); clearTimeout(wheelT); wheelT = setTimeout(detent, 160);
+}, { passive: false });
+
+addEventListener("keydown", e => {
+  if (e.target.matches("input, textarea")) return;
+  const printed = STATIONS.filter(s => !s.secret), i = printed.indexOf(nearest(freq));
+  if (e.key === "ArrowRight") { tuneTo(printed[Math.min(printed.length - 1, i + 1)] || printed[0]); e.preventDefault(); }
+  else if (e.key === "ArrowLeft") { tuneTo(printed[Math.max(0, i - 1)] || printed[0]); e.preventDefault(); }
+  else if (e.key === "Home") { tuneTo(printed[0]); e.preventDefault(); }
+  else if (e.key === "End") { tuneTo(STATIONS[STATIONS.length - 1]); e.preventDefault(); }
+});
+
+/* ---------- static ---------- */
+const nc = $("noise"), nx = nc.getContext("2d", { alpha: false });
+let nw, nh, img, buf;
+function sizeNoise() { nw = Math.max(1, Math.ceil(glass.clientWidth / 3)); nh = Math.max(1, Math.ceil(glass.clientHeight / 3)); nc.width = nw; nc.height = nh; img = nx.createImageData(nw, nh); buf = new Uint32Array(img.data.buffer); drawNoise(); }
+function drawNoise() { for (let i = 0; i < buf.length; i++) { const v = 100 + (Math.random() * 155 | 0); buf[i] = 0xff000000 | (v << 16) | (v << 8) | v; } nx.putImageData(img, 0, 0); }
+
+/* text turns to noise when the signal is weak */
+const GLYPHS = "ABCDEFGHKLMNPRSTUVXYZ#%&*+=/\\|:;.·";
+const nodesOf = el => { const out = [], w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) if (n.data.trim()) out.push([n, n.data]); return out; };
+STATIONS.forEach(s => { s.nodes = nodesOf(s.el); });
+function scramble(p) { if (!current) return; for (const [n, o] of current.nodes) n.data = p <= 0 ? o : o.replace(/\S/g, c => Math.random() < p ? GLYPHS[Math.random() * GLYPHS.length | 0] : c); }
+
+/* ---------- sound (built in code, only after the knob is turned) ---------- */
+let ac, gNoise, osc, gOsc, gPurr;
+const snd = $("snd");
+snd.addEventListener("click", () => {
+  const on = snd.getAttribute("aria-pressed") !== "true"; snd.setAttribute("aria-pressed", on);
+  if (!ac) {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    const len = ac.sampleRate * 2, b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const src = ac.createBufferSource(); src.buffer = b; src.loop = true;
+    const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1400; bp.Q.value = .5;
+    gNoise = ac.createGain(); gNoise.gain.value = 0; src.connect(bp).connect(gNoise).connect(ac.destination);
+    osc = ac.createOscillator(); osc.type = "sine"; gOsc = ac.createGain(); gOsc.gain.value = 0; osc.connect(gOsc).connect(ac.destination);
+    const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 140;
+    gPurr = ac.createGain(); gPurr.gain.value = 0;
+    const lfo = ac.createOscillator(); lfo.frequency.value = 24; const lg = ac.createGain(); lg.gain.value = .5;
+    const purrAmp = ac.createGain(); purrAmp.gain.value = .5; lfo.connect(lg).connect(purrAmp.gain);
+    src.connect(lp).connect(purrAmp).connect(gPurr).connect(ac.destination);
+    src.start(); osc.start(); lfo.start();
+  }
+  ac[on ? "resume" : "suspend"]();
+});
+function audio(sig, s) {
+  if (!ac || ac.state !== "running") return;
+  const t = ac.currentTime, d = Math.abs(freq - s.f);
+  gNoise.gain.setTargetAtTime((1 - sig) ** 1.4 * .28, t, .04);
+  gOsc.gain.setTargetAtTime(4 * sig * (1 - sig) * .035, t, .04);
+  osc.frequency.setTargetAtTime(180 + d * 45, t, .04);
+  gPurr.gain.setTargetAtTime(s.secret ? sig * 1.4 : 0, t, .1);
+}
+
+/* ---------- the loop ---------- */
+let frame = 0;
+function show(s) {
+  if (current === s) return;
+  if (current) { scramble(0); current.el.classList.remove("on"); current.leg && current.leg.classList.remove("live"); }
+  current = s; s.el.classList.add("on"); s.leg && s.leg.classList.add("live"); prog.scrollTop = 0;
+}
+function loop() {
+  frame++;
+  if (!dragging) {
+    if (target != null) { freq += (target - freq) * (RM ? 1 : .11); if (Math.abs(target - freq) < .04) { freq = target; target = null; } }
+    else if (vel) { freq = clamp(freq + vel); vel *= .93; if (Math.abs(vel) < .25 || freq === LO || freq === HI) { vel = 0; detent(); } }
+  }
+  const sig = signalOf(freq), s = nearest(freq);
+  show(s);
+  const jit = !RM && sig < .9 ? (Math.random() - .5) * (1 - sig) * 3 : 0;
+  strip.style.transform = `translate3d(${cx - (freq - LO) * k + jit}px,0,0)`;
+  document.documentElement.style.setProperty("--sig", sig.toFixed(3));
+  document.documentElement.style.setProperty("--noise", (RM ? .05 + (1 - sig) * .5 : .06 + (1 - sig) * .78).toFixed(3));
+  if (!RM && (sig < .985 || frame % 8 === 0)) drawNoise();
+  if (!RM && frame % 4 === 0) scramble(sig >= .985 ? 0 : (1 - sig) ** .8);
+  if (sig >= .985 && locked !== s) { locked = s; live.textContent = `Tuned to ${s.secret ? "an unlisted station" : s.name}, ${s.f} kHz`; }
+  else if (sig < .985) locked = null;
+  audio(sig, s);
+  requestAnimationFrame(loop);
+}
+
+addEventListener("resize", () => { measure(); });
+document.fonts.ready.then(measure);
+measure();
+requestAnimationFrame(() => { glass.classList.remove("cold"); });
+if (!RM) setTimeout(() => { if (!moved && !dragging) target = 630; }, 900);
+loop();
+</script>
+</body>
+</html>
