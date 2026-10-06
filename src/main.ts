@@ -11,6 +11,8 @@ const $ = <T extends HTMLElement = HTMLElement>(s: string): T => {
 };
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c);
 const isFill = (s: string) => /^\s*\[fill/i.test(s);
+// [text](https://…) inside a line becomes a link; everything else is escaped
+const rich = (s: string) => esc(s).replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
 const blooms = (f: Flower) => f.lines.some((l) => !isFill(l)) || (f.list?.length ?? 0) > 0;
 const ON_A: Record<string, string> = { daisy: 'a daisy', sunflower: 'a sunflower', cosmos: 'a cosmos', poppy: 'a poppy', allium: 'an allium' };
 const bare = (url: string) => url.replace(/^https?:\/\//, '');
@@ -87,7 +89,7 @@ function fillNote(i: number) {
     $('#note-landed').textContent = it.kind === 'bud'
       ? 'Landed on a bud. This one hasn’t bloomed yet.'
       : `Landed on ${ON_A[it.kind] ?? 'a flower'}.`;
-    html = it.lines.map((l) => `<p${isFill(l) ? ' class="fill"' : ''}>${esc(l)}</p>`).join('');
+    html = it.lines.map((l) => `<p${isFill(l) ? ' class="fill"' : ''}>${rich(l)}</p>`).join('');
     if (it.list) html += '<ul>' + it.list.map((l) => `<li>${esc(l)}</li>`).join('') + '</ul>';
     if (it.links) html += '<p class="go">' + it.links.map((l) => `<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join('') + '</p>';
   }

@@ -28,6 +28,7 @@ export interface DakshContent {
    A flower blooms as soon as at least one of its lines is filled in.
    If every line still starts with "[fill", it stays a closed bud.
    species: daisy | sunflower | cosmos | poppy | allium
+   Write [text](https://…) inside a line to make that text a link.
    ===================================================================== */
 export const DAKSH: DakshContent = {
   name: 'Daksh Jain',
@@ -37,7 +38,7 @@ export const DAKSH: DakshContent = {
   x: 'https://x.com/dakshhjainn',
   flowers: [
     { title: 'Why a bee?', species: 'daisy', color: '#FFFFFF', lines: [
-      'My handle is wannabeepolymath. Read it twice: wanna-bee polymath.',
+      '[My handle is wannabeepolymath.](https://github.com/wannabeepolymath) Read it twice: wanna-bee polymath.',
       'A bee never settles on one flower. It drifts from bloom to bloom, collects a little nectar from each, and carries it all home to make something no single flower could.',
       'That’s how I learn. A bit of systems here, a bit of markets there, whatever catches my eye next. I collect the nectar of knowledge wherever it grows, and hope it turns into honey.',
     ] },
