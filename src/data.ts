@@ -43,10 +43,7 @@ export const DAKSH: DakshContent = {
     ] },
     { title: 'Burmese', species: 'cosmos', color: '#FF6FA8', lines: [
       'A desktop cat for the Mac that I founded and build. It reacts to your coding agents and keeps your reminders.',
-    ], links: [
-      { label: 'theburmese.xyz', href: 'https://www.theburmese.xyz/' },
-      { label: 'Download', href: 'https://github.com/wannabeepolymath/burmese-download' },
-    ] },
+    ], links: [{ label: 'theburmese.xyz', href: 'https://www.theburmese.xyz/' }] },
     { title: 'AI agents', species: 'sunflower', color: '#FFC21A', lines: [
       'I was a backend engineer at Emergent in 2025, working on the workflows that run AI agents.',
     ], list: [
