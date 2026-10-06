@@ -17,7 +17,6 @@ const bare = (url: string) => url.replace(/^https?:\/\//, '');
 
 /* ---------- packet ---------- */
 $('#p-name').textContent = DAKSH.name;
-$('#p-latin').textContent = DAKSH.latin;
 $('#p-intro').textContent = DAKSH.intro;
 $<HTMLAnchorElement>('#l-mail').href = 'mailto:' + DAKSH.email;
 $<HTMLAnchorElement>('#l-gh').href = DAKSH.github;

@@ -16,7 +16,6 @@ export interface Flower {
 
 export interface DakshContent {
   name: string;
-  latin: string;
   intro: string;
   email: string;
   github: string;
@@ -32,7 +31,6 @@ export interface DakshContent {
    ===================================================================== */
 export const DAKSH: DakshContent = {
   name: 'Daksh Jain',
-  latin: 'Polymathus wannabee',
   intro: 'Based in Bangalore. Studying computer science at BITS Pilani until 2027. I build software, and keep wandering into other fields.',
   email: 'dakshjainn2004@gmail.com',
   github: 'https://github.com/wannabeepolymath',

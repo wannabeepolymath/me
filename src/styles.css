@@ -47,8 +47,7 @@ a { color: inherit; }
   background: conic-gradient(from 135deg at 50% 0, var(--violet) 90deg, transparent 0) 0 0 / 14px 7px repeat-x;
 }
 .packet h1 { margin: 0; font: 400 clamp(2.3rem, 3.6vw, 3rem)/1 var(--display); color: var(--glow); }
-.latin { margin: .3rem 0 .9rem; font-style: italic; color: rgb(255 242 204 / .78); }
-.intro { margin: 0 0 1rem; max-width: 34ch; }
+.intro { margin: .8rem 0 1rem; max-width: 34ch; }
 .links { display: flex; flex-wrap: wrap; gap: .45rem; margin: 0; padding: 0; list-style: none; }
 .links a {
   display: inline-block; padding: .42rem .9rem; border-radius: 999px;
@@ -151,7 +150,6 @@ body:not(.gl, .no-gl) #tags { visibility: hidden; }
 @media (max-width: 700px) {
   .packet { padding: 1.1rem 1.1rem 1rem; transform: rotate(-.8deg); }
   .packet h1 { font-size: 2.1rem; }
-  .latin { margin-bottom: .55rem; font-size: .95rem; }
   .intro { margin-bottom: .75rem; font-size: .95rem; line-height: 1.45; }
   .links a { padding: .36rem .8rem; font-size: .95rem; }
   .tag { font-size: .9rem; }
@@ -172,7 +170,6 @@ body:not(.gl, .no-gl) #tags { visibility: hidden; }
 @media (max-height: 520px) {
   .packet { width: min(25rem, 52vw); padding: .85rem 1rem .9rem; }
   .packet h1 { font-size: 1.8rem; }
-  .latin { display: none; }
   .intro { margin: .45rem 0 .6rem; font-size: .86rem; line-height: 1.4; max-width: none; }
   .links a { padding: .3rem .75rem; font-size: .88rem; }
   .note { max-height: calc(100dvh - 24px); padding: 1.1rem 1.3rem 1rem; }
