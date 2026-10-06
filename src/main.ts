@@ -80,7 +80,7 @@ function fillNote(i: number) {
   let html = '';
   if (it.kind === 'hive') {
     $('#note-landed').textContent = 'Landed at the hive.';
-    html = `<p>Email is the quickest way to reach him. He also posts on X and keeps his code on GitHub.</p>
+    html = `<p>Email is the quickest way to reach me. I also post on X and keep my code on GitHub.</p>
       <ul><li><a href="mailto:${esc(DAKSH.email)}">${esc(DAKSH.email)}</a></li>
       <li><a href="${esc(DAKSH.github)}" target="_blank" rel="noopener">${esc(bare(DAKSH.github))}</a></li>
       <li><a href="${esc(DAKSH.x)}" target="_blank" rel="noopener">${esc(bare(DAKSH.x))}</a></li></ul>`;

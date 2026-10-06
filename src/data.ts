@@ -33,39 +33,39 @@ export interface DakshContent {
 export const DAKSH: DakshContent = {
   name: 'Daksh Jain',
   latin: 'Polymathus wannabee',
-  intro: 'Grows in Bangalore. Studying computer science at BITS Pilani until 2027. Builds software, and keeps wandering into other fields.',
+  intro: 'Based in Bangalore. Studying computer science at BITS Pilani until 2027. I build software, and keep wandering into other fields.',
   email: 'dakshjainn2004@gmail.com',
   github: 'https://github.com/wannabeepolymath',
   x: 'https://x.com/dakshhjainn',
   flowers: [
     { title: 'Why a bee?', species: 'daisy', color: '#FFFFFF', lines: [
-      'His handle is wannabeepolymath. Read it twice: wanna-bee polymath.',
-      'A bee never settles on one flower. It drifts from bloom to bloom, takes a little nectar from each, and carries it all home to make something no single flower could.',
-      'That’s how he learns. A bit of systems here, a bit of markets there, whatever catches his eye next. He gathers the nectar of knowledge wherever it grows, and hopes it turns into honey.',
+      'My handle is wannabeepolymath. Read it twice: wanna-bee polymath.',
+      'A bee never settles on one flower. It drifts from bloom to bloom, collects a little nectar from each, and carries it all home to make something no single flower could.',
+      'That’s how I learn. A bit of systems here, a bit of markets there, whatever catches my eye next. I collect the nectar of knowledge wherever it grows, and hope it turns into honey.',
     ] },
     { title: 'Burmese', species: 'cosmos', color: '#FF6FA8', lines: [
-      'A desktop cat for the Mac that he founded and builds. It reacts to your coding agents and keeps your reminders.',
+      'A desktop cat for the Mac that I founded and build. It reacts to your coding agents and keeps your reminders.',
     ], links: [
       { label: 'theburmese.xyz', href: 'https://www.theburmese.xyz/' },
       { label: 'Download', href: 'https://github.com/wannabeepolymath/burmese-download' },
     ] },
     { title: 'AI agents', species: 'sunflower', color: '#FFC21A', lines: [
-      'Backend engineer at Emergent in 2025, on the workflows that run AI agents.',
+      'I was a backend engineer at Emergent in 2025, working on the workflows that run AI agents.',
     ], list: [
       'Circuit breakers so one failing tool can’t take an agent down',
       '58% less pod memory on Kubernetes',
     ], links: [{ label: 'Emergent', href: 'https://emergent.sh/' }] },
     { title: 'Chains', species: 'cosmos', color: '#FF8A1F', lines: [
-      'A Solana staking contract in Rust, and a Telegram survival game that pays its winners in SOL.',
+      'I wrote a Solana staking contract in Rust, and a Telegram survival game that pays its winners in SOL.',
     ], links: [
       { label: 'Staking', href: 'https://github.com/wannabeepolymath/Solana-Staking-Contract' },
       { label: 'Survival pot', href: 'https://github.com/wannabeepolymath/Sol-survival-jackpot' },
     ] },
     { title: 'BITS Pilani', species: 'poppy', color: '#FF4B2B', lines: [
-      'Studying computer science there: a bachelor’s and a master’s, finishing in 2027.',
+      'I’m studying computer science there: a bachelor’s and a master’s, finishing in 2027.',
     ] },
     { title: 'Mac apps', species: 'daisy', color: '#FFB3D1', lines: [
-      'Small tools for the machine he lives on.',
+      'Small tools for the machine I live on.',
     ], list: [
       'Parla, on-device dictation with Whisper on Metal',
       'Branch Visualizer, git in the menu bar, on Homebrew',
@@ -74,13 +74,13 @@ export const DAKSH: DakshContent = {
       { label: 'Branch Visualizer', href: 'https://github.com/wannabeepolymath/git-branch-Visualizer' },
     ] },
     { title: 'Markets', species: 'poppy', color: '#7A3CE0', lines: [
-      'cexy, a matching engine and orderbook in Rust, with benchmarks. And an orderbook in C++.',
+      'I built cexy, a matching engine and orderbook in Rust, with benchmarks. And an orderbook in C++.',
     ], links: [
       { label: 'cexy', href: 'https://github.com/wannabeepolymath/cexy' },
       { label: 'Orderbook', href: 'https://github.com/wannabeepolymath/Orderbook-CPP' },
     ] },
     { title: 'Systems', species: 'allium', color: '#9152F2', lines: [
-      'Mostly the parts of software nobody sees: servers, sockets, caches and queues.',
+      'I mostly build the parts of software nobody sees: servers, sockets, caches and queues.',
     ], list: [
       'mux, Rust WebSockets that keep audio flowing with 36% of backends down',
       'A Redis clone in Go that holds 20K connections',
@@ -91,7 +91,7 @@ export const DAKSH: DakshContent = {
       { label: 'MiniDB', href: 'https://github.com/wannabeepolymath/miniDB' },
     ] },
     { title: 'Android', species: 'sunflower', color: '#FF9F1C', lines: [
-      'A native GPS simulator with a Node and Postgres backend, and a Kotlin tool that edits file metadata.',
+      'I built a native GPS simulator with a Node and Postgres backend, and a Kotlin tool that edits file metadata.',
     ], links: [
       { label: 'GPS simulator', href: 'https://github.com/wannabeepolymath/gps-simulation' },
       { label: 'Metadata tool', href: 'https://github.com/wannabeepolymath/forensics' },
