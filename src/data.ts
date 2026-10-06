@@ -40,7 +40,8 @@ export const DAKSH: DakshContent = {
   flowers: [
     { title: 'Why a bee?', species: 'daisy', color: '#FFFFFF', lines: [
       'His handle is wannabeepolymath. Read it twice: wanna-bee polymath.',
-      'A bee visits hundreds of flowers a day and makes one thing out of all of them. That is roughly the plan.',
+      'A bee never settles on one flower. It drifts from bloom to bloom, takes a little nectar from each, and carries it all home to make something no single flower could.',
+      'That’s how he learns. A bit of systems here, a bit of markets there, whatever catches his eye next. He gathers the nectar of knowledge wherever it grows, and hopes it turns into honey.',
     ] },
     { title: 'Burmese', species: 'cosmos', color: '#FF6FA8', lines: [
       'A desktop cat for the Mac that he founded and builds. It reacts to your coding agents and keeps your reminders.',
@@ -62,8 +63,7 @@ export const DAKSH: DakshContent = {
     ] },
     { title: 'BITS Pilani', species: 'poppy', color: '#FF4B2B', lines: [
       'Studying computer science there: a bachelor’s and a master’s, finishing in 2027.',
-      'Built MiniDB along the way: B+ trees, a write-ahead log and two-phase locking.',
-    ], links: [{ label: 'MiniDB', href: 'https://github.com/wannabeepolymath/miniDB' }] },
+    ] },
     { title: 'Mac apps', species: 'daisy', color: '#FFB3D1', lines: [
       'Small tools for the machine he lives on.',
     ], list: [
@@ -84,9 +84,11 @@ export const DAKSH: DakshContent = {
     ], list: [
       'mux, Rust WebSockets that keep audio flowing with 36% of backends down',
       'A Redis clone in Go that holds 20K connections',
+      'MiniDB, a database from scratch: B+ trees, a write-ahead log and two-phase locking',
     ], links: [
       { label: 'mux', href: 'https://github.com/wannabeepolymath/mux' },
       { label: 'Redis clone', href: 'https://github.com/wannabeepolymath/redis' },
+      { label: 'MiniDB', href: 'https://github.com/wannabeepolymath/miniDB' },
     ] },
     { title: 'Android', species: 'sunflower', color: '#FF9F1C', lines: [
       'A native GPS simulator with a Node and Postgres backend, and a Kotlin tool that edits file metadata.',
